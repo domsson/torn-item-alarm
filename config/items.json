@@ -1,0 +1,44 @@
+[
+	{
+		"id": 1087,
+		"alarm_price": 2400,
+		"trade_price": 2555,
+		"interval": 3
+	},
+	{
+		"id": 788,
+		"alarm_price": 8000,
+		"trade_price": 10000,
+		"interval": 5
+	},
+	{
+		"id": 1327,
+		"alarm_price": 750000,
+		"trade_price": 900000,
+		"interval": 5
+	},
+	{
+		"id": 1086,
+		"alarm_price": 4800,
+		"trade_price": 5000,
+		"interval": 5
+	},
+	{
+		"id": 68,
+		"alarm_price": 3650,
+		"trade_price": 3750,
+		"interval": 5
+	},
+	{
+		"id": 67,
+		"alarm_price": 7300,
+		"trade_price": 7500,
+		"interval": 5
+	},
+	{
+		"id": 66,
+		"alarm_price": 9800,
+		"trade_price": 10000,
+		"interval": 5
+	}
+]

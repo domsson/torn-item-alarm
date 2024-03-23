@@ -1,0 +1,203 @@
+{% extends "partials/base.html.twig" %}
+
+{% block head %}
+<script src="js/inputs.js"></script>
+<script src="js/item-alarm.js"></script>
+<script>
+
+function itemalarm_cb(item, bargains, quantity, dirty)
+{
+	console.log("Bargains for " + item.id + ": " + quantity);
+
+	let was_hot = item.element.classList.contains("hot");
+	let item_hot = quantity > 0;
+	item.element.classList.toggle("hot", item_hot);
+	
+	let quantity_info = item.element.querySelector(".quantity");
+	quantity_info.textContent = quantity;
+
+	let profit = calculate_profit(item, bargains);
+	let profit_info = item.element.querySelector(".profit");
+	profit_info.textContent = profit;
+
+	/*
+	if (item_hot)
+	{
+		console.log(bargains);
+		if (!was_hot)
+		{
+			let audio = document.querySelector("#sound");
+			let volume = document.querySelector("#sound_volume");
+			let vol_value = parseInt(volume.value) / 100.0;
+			console.log("Playing notification sound at " + vol_value + "% volume");
+			audio.volume = vol_value;
+			audio.play();
+		}
+	}
+	*/
+	if (dirty)
+	{
+		let audio = document.querySelector("#sound");
+		let volume = document.querySelector("#sound_volume");
+		let vol_value = parseInt(volume.value) / 100.0;
+		console.log("Playing notification sound at " + vol_value + "% volume");
+		audio.volume = vol_value;
+		audio.play();
+	}
+}
+
+function calculate_profit(item, bargains)
+{
+	let profit = 0;
+	for (let bargain of bargains.bazaar)
+	{
+		profit += (item.trade_price - bargain.cost) * bargain.quantity;
+	}
+	for (let bargain of bargains.market)
+	{
+		profit += (item.trade_price - bargain.cost) * bargain.quantity;
+	}
+	return profit;
+}
+
+function inputs_cb(details)
+{
+}
+
+window.addEventListener("load", () => {
+	let inputs = new Inputs({ "callback": inputs_cb });
+	inputs.init();
+	inputs.fire();
+
+	let audio = document.querySelector("#sound");
+
+	let items = document.querySelectorAll(".item");
+	let api_key = document.querySelector("#api_key").value;
+
+	for (let item of items)
+	{
+		let item_id = item.getAttribute("data-itemalarm-id");
+		if (!item_id) continue;
+
+		let alarm = new ItemAlarm(item_id, api_key, itemalarm_cb);
+		alarm.init();
+
+		let start = item.querySelector(".start");
+		start.addEventListener("click", (event) => {
+			alarm.start();
+			let is_running = alarm.is_running();
+			item.classList.toggle("started", is_running);
+			item.classList.toggle("stopped", !is_running);
+		});
+		let stop = item.querySelector(".stop");
+		stop.addEventListener("click", (event) => {
+			alarm.stop();
+			let is_running = alarm.is_running();
+			item.classList.toggle("started", is_running);
+			item.classList.toggle("stopped", !is_running);
+		});
+	}
+});
+
+</script>
+{% endblock %}
+
+{% block main %}
+
+<section class="item-panel">
+<div class="head">
+	<h2>Items to monitor</h2>
+</div>
+<div class="body">
+<ul class="items">
+	{% for item in items %}
+	<li class="item stopped" 
+		data-itemalarm-id="{{ item.id }}"
+		data-itemalarm-bargains="" 
+		data-itemalarm-alarm-price="{{ item.alarm_price }}"
+		data-itemalarm-trade-price="{{ item.trade_price }}"
+		data-itemalarm-interval="{{ item.interval }}">
+		<div class="controls">
+			<button class="start">
+				<span class="icon">▶</span>
+				<span class="label">Start</span>
+			</button>
+			<button class="stop">
+				<span class="icon">■</span>
+				<span class="label">Stop</span>
+			</button>
+		</div>
+		<div class="image">
+			<img src="https://www.torn.com/images/items/{{ item.id }}/large.png">
+		</div>
+		<div class="info">
+			<span class="name">{{ item.name }}</span>
+			<span class="alarm_price">🔔 ${{ item.alarm_price }}</span>
+			<span class="trade_price">💰 ${{ item.trade_price }}</span>
+		</div>
+		<div class="alarm">
+			<div class="bargain">
+				<span class="quantity">0</span>
+				<span class="profit">0</span>
+			</div>
+		</div>
+		<div class="actions">
+			<a class="button" href="{{ torn.market_link}}{{ item.id }}" target="_blank">
+				<span class="icon">🛒</span>
+				<span class="label">To Market</span>
+			</a>
+		</div>
+	</li>
+	{% endfor %}
+</ul>
+</div>
+</section>
+
+<section class="settings-panel">
+<div class="head">
+	<h2>Settings</h2>
+</div>
+<div class="body">
+	<audio id="sound" preload="auto" src="/audio/545365__stwime__idk2.mp3"></audio>
+	<fieldset>
+		<label for="sound_volume">Volume</label>
+		<input type="range" id="sound_volume">
+	</fieldset>
+	<fieldset>
+		<label for="api_key">API Key</label>
+		<input type="password" id="api_key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
+	</fieldset>
+	<fieldset>
+		<label for="dynamic_prices">Use market values</label>
+		<input type="checkbox" id="dynamic_prices">
+	</fieldset>
+</div>
+</section>
+
+<section class="info">
+<div class="head">
+	<h2>Info</h2>
+</div>
+<div class="body">
+	<ul>
+		<li class="api_limit">
+			<span class="label">Limit: </span>
+			<span class="value">{{ torn.api_limit|round(2) }}</span>
+			<span class="unit">/s</span>
+		</li>
+		<li class="req_max">
+			<span class="label">Maximum: </span>
+			<span class="value">{{ info.req_per_sec|round(2) }}</span>
+			<span class="unit">/s</span>
+		</li>
+		<li class="req_cur">
+			<span class="label">Current: </span>
+			<span class="value">0.00</span>
+			<span class="unit">/s</span>
+		</li>
+	</ul>
+</div>
+</section>
+
+
+{% endblock %}
