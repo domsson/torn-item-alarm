@@ -104,13 +104,26 @@ window.addEventListener("load", () => {
 
 {% block main %}
 
+<section class="login">
+<div class="head">
+	<h2>Login</h2>
+</div>
+<div class="body">
+	<fieldset>
+		<label for="api_key">API Key</label>
+		<input type="password" id="api_key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
+		<button>Set</button>
+	</fieldset>
+</div>
+</section>
+
 <section class="item-panel">
 <div class="head">
-	<h2>Items to monitor</h2>
+	<h2>Items Monitor</h2>
 </div>
 <div class="body">
 <ul class="items">
-	{% for item in items %}
+	{% for item in user.items %}
 	<li class="item stopped" 
 		data-itemalarm-id="{{ item.id }}"
 		data-itemalarm-bargains="" 
@@ -150,6 +163,17 @@ window.addEventListener("load", () => {
 	</li>
 	{% endfor %}
 </ul>
+<fieldset>
+	<select>
+		{% for key, item in items %}
+		<option value="{{ key }}">{{ item.name }}</option>
+		{% endfor %}
+	</select>
+	<button>
+		<span class="icon">+</span>
+		<span class="label">Add</span>
+	</button>
+</fieldset>
 </div>
 </section>
 
@@ -162,10 +186,6 @@ window.addEventListener("load", () => {
 	<fieldset>
 		<label for="sound_volume">Volume</label>
 		<input type="range" id="sound_volume">
-	</fieldset>
-	<fieldset>
-		<label for="api_key">API Key</label>
-		<input type="password" id="api_key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
 	</fieldset>
 	<fieldset>
 		<label for="dynamic_prices">Use market values</label>

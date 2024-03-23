@@ -13,6 +13,7 @@ define("CONFIG_DIR",   "config");
 define("DATA_DIR",     "data");
 define("TEMPLATE_DIR", "templates");
 define("USER_DIR",     "data/users");
+define("TORN_DIR",     "data/torn");
 
 $debug    = yon_setup_errors(DEBUG);
 $encoding = yon_setup_utf8();
@@ -21,18 +22,20 @@ $uri      = yon_parse_url();
 $twig     = yon_setup_twig(TEMPLATE_DIR);
 
 $page = yon_json_file_load(CONFIG_DIR . "/page.json");
-$torn = yon_json_file_loaD(CONFIG_DIR . "/torn.json");
-$user = $_SERVER["REMOTE_USER"] ?? $_SERVER["PHP_AUTH_USER"];
+$torn = yon_json_file_load(CONFIG_DIR . "/torn.json");
+// $user = $_SERVER["REMOTE_USER"] ?? $_SERVER["PHP_AUTH_USER"];
 $info = [];
-$items = yon_json_file_load(CONFIG_DIR . "/items.json"); 
+// $items = yon_json_file_load(CONFIG_DIR . "/items.json"); 
 
 //
 // check if we have a user record (based on session ID)
 //
 
-//$user = yon_json_find_file_by_prop($dir, $prop_name, $prop_value, &$filepath)
+$user_dir = USER_DIR;
+$user_filepath = null;
+$user = yon_json_find_file_by_prop($user_dir, "sid", $sid, $user_filepath);
 
-$api_key   = $torn["api_key"];
+$api_key   = $user["api_key"] ?? "bcNz1mj6LedkuUoZ";
 $api_url   = $torn["api_url"];
 $api_limit = $torn["api_limit"];
 
@@ -40,17 +43,35 @@ $api_limit = $torn["api_limit"];
 // check if we're below the API rate limit ($api_limit is "max request/second")
 //
 
+/*
 $req_max = 0;
 foreach ($items as $item)
 {
 	$req_max += 1.0 / $item["interval"];
 }
 $info["req_per_sec"] = $req_max;
+ */
 
 //
 // fetch item names and add them to the item JSON (TODO cache this!)
 //
 
+$torn_items_filepath = TORN_DIR . "/items.json";
+//$torn_items_filepath = ROOT_DIR + "/" + TORN_DIR + "/items.json";
+$items = yon_json_file_load($torn_items_filepath);
+
+if ($items === false && $api_key)
+{
+	$item_info = yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
+
+	if ($item_info && isset($item_info["items"]))
+	{
+		$items = $item_info["items"];
+		yon_json_file_save($torn_items_filepath, $items); 
+	}
+}
+
+/*
 $item_info = yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
 
 if ($item_info && isset($item_info["items"]))
@@ -64,6 +85,7 @@ if ($item_info && isset($item_info["items"]))
 		}
 	}
 }
+ */
 
 // 
 // assemble data and render the page
