@@ -72,7 +72,7 @@ window.addEventListener("load", () => {
 	let audio = document.querySelector("#sound");
 
 	let items = document.querySelectorAll(".item");
-	let api_key = document.querySelector("#api_key").value;
+	let api_key = document.querySelector("#api-key").value;
 
 	for (let item of items)
 	{
@@ -109,17 +109,19 @@ window.addEventListener("load", () => {
 	<h2>Login</h2>
 </div>
 <div class="body">
+	<form action="/set-api-key" method="post">
 	<fieldset>
-		<label for="api_key">API Key</label>
-		<input type="password" id="api_key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
-		<button>Set</button>
+		<label for="api-key">API Key</label>
+		<input type="password" name="api-key" id="api-key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
+		<button type="submit"><span class="label">Set</span></button>
 	</fieldset>
+	</form>
 </div>
 </section>
 
 <section class="item-panel">
 <div class="head">
-	<h2>Items Monitor</h2>
+	<h2>Item Monitor</h2>
 </div>
 <div class="body">
 <ul class="items">
@@ -163,17 +165,30 @@ window.addEventListener("load", () => {
 	</li>
 	{% endfor %}
 </ul>
+<form action="/add-item" method="post">
 <fieldset>
-	<select>
+	<select name="add-item-id" id="add-item-id">
 		{% for key, item in items %}
 		<option value="{{ key }}">{{ item.name }}</option>
 		{% endfor %}
 	</select>
-	<button>
+	<button type="submit">
 		<span class="icon">+</span>
 		<span class="label">Add</span>
 	</button>
 </fieldset>
+</form>
+<script>
+	function on_items_input(details)
+	{
+		console.log(details);
+	}
+
+	window.addEventListener("load", (event) => {
+		let inputs = new Inputs({ "name": "items", "callback": on_items_input });
+		inputs.init();
+	});
+</script>
 </div>
 </section>
 

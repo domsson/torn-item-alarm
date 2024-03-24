@@ -25,7 +25,8 @@ $page = yon_json_file_load(CONFIG_DIR . "/page.json");
 $torn = yon_json_file_load(CONFIG_DIR . "/torn.json");
 // $user = $_SERVER["REMOTE_USER"] ?? $_SERVER["PHP_AUTH_USER"];
 $info = [];
-// $items = yon_json_file_load(CONFIG_DIR . "/items.json"); 
+
+//yon_dump_var($uri);
 
 //
 // check if we have a user record (based on session ID)
@@ -35,22 +36,31 @@ $user_dir = USER_DIR;
 $user_filepath = null;
 $user = yon_json_find_file_by_prop($user_dir, "sid", $sid, $user_filepath);
 
-$api_key   = $user["api_key"] ?? "bcNz1mj6LedkuUoZ";
+if (!$user)
+{
+	$user = [];
+	$user["sid"] = $sid;
+}
+
+yon_dump_var($user);
+
+$api_key   = $user["api_key"] ?? null;
 $api_url   = $torn["api_url"];
 $api_limit = $torn["api_limit"];
 
 //
-// check if we're below the API rate limit ($api_limit is "max request/second")
+// functions
 //
 
-/*
-$req_max = 0;
-foreach ($items as $item)
+function save_user_data_to_file($user)
 {
-	$req_max += 1.0 / $item["interval"];
+	if (!isset($user["api_key"]))
+	{
+		return false;
+	}
+	$filepath = USER_DIR . "/" . $user["api_key"] . ".json";
+	return yon_json_file_save($filepath, $user);
 }
-$info["req_per_sec"] = $req_max;
- */
 
 //
 // fetch item names and add them to the item JSON (TODO cache this!)
@@ -71,21 +81,31 @@ if ($items === false && $api_key)
 	}
 }
 
-/*
-$item_info = yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
-
-if ($item_info && isset($item_info["items"]))
+if ($uri["slug"] == "set-api-key")
 {
-	foreach ($items as $key => $item)
+	$api_key = filter_var($_POST["api-key"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+	if ($api_key)
 	{
-		$item_id = $item["id"];
-		if (isset($item_info["items"][$item_id]))
-		{
-			$items[$key] = array_merge($item, $item_info["items"][$item_id]);
-		}
+		$user["api_key"] = $api_key;
+		yon_dump_var($user);
+		save_user_data_to_file($user);
+		yon_redirect($uri["base"]);
+	}
+
+}
+
+if ($uri["slug"] == "add-item")
+{
+	$item_id = (int) filter_var($_POST["add-item-id"], FILTER_SANITIZE_NUMBER_INT);
+	if ($user)
+	{
+		if (!isset($user["items"])) $user["items"] = [];
+		$user["items"][$item_id] = [];
+		save_user_data_to_file($user);
+		yon_redirect($uri["base"]);
 	}
 }
- */
 
 // 
 // assemble data and render the page
