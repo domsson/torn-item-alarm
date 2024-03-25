@@ -63,6 +63,16 @@ function save_user_data_to_file($user)
 }
 
 //
+// DUDE! WE CAN GETCH USER ID EVEN WITH PUBLIC KEY!
+// https://api.torn.com/user/?selections=basic&key=
+// $result["name"] = domsson
+// $result["player_id"] = 3206827
+//
+// Can also get profile image:
+// https://api.torn.com/user/?selections=profile&key=
+// $result["profile_image"] = "https://profileimages.torn.com/3c701333-7063-4911-b5d2-438fc767ec24-3206827.png"
+
+//
 // fetch item names and add them to the item JSON (TODO cache this!)
 //
 
@@ -81,18 +91,17 @@ if ($items === false && $api_key)
 	}
 }
 
-if ($uri["slug"] == "set-api-key")
+if ($uri["slug"] == "login")
 {
-	$api_key = filter_var($_POST["api-key"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-
-	if ($api_key)
+	if (isset($_POST["api-key"]))
 	{
+		$api_key = filter_var($_POST["api-key"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 		$user["api_key"] = $api_key;
-		yon_dump_var($user);
 		save_user_data_to_file($user);
-		yon_redirect($uri["base"]);
+		// TODO figure out while yon sees the URL as https (when it should be http)
+		// 	and once that's fixed, use $uri["base"] for the redirect!
 	}
-
+	yon_redirect("http://itemalarm.halfpast.one");
 }
 
 if ($uri["slug"] == "add-item")

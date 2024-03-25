@@ -109,10 +109,10 @@ window.addEventListener("load", () => {
 	<h2>Login</h2>
 </div>
 <div class="body">
-	<form action="/set-api-key" method="post">
+	<form action="/login" method="post">
 	<fieldset>
 		<label for="api-key">API Key</label>
-		<input type="password" name="api-key" id="api-key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
+		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
 		<button type="submit"><span class="label">Set</span></button>
 	</fieldset>
 	</form>
