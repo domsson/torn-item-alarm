@@ -106,7 +106,7 @@ window.addEventListener("load", () => {
 
 <section class="login">
 <div class="head">
-	<h2>Login</h2>
+	<h2 class="heading">User</h2>
 </div>
 <div class="body">
 {% if user.player_id %}
@@ -127,19 +127,28 @@ window.addEventListener("load", () => {
 </div>
 </section>
 
-<section class="item-panel">
+<section class="items-panel">
 <div class="head">
-	<h2>Item Monitor</h2>
+	<h2 class="heading">Item Monitor</h2>
+	<button id="items-edit-toggle" data-inputs="items-edit-toggle" data-inputs-event="click">
+		<span class="icon">⚙</span>
+	</button>
 </div>
 <div class="body">
+{% if user.items|length == 0 %}
+	<p>Currently no items on your watchlist.</p>
+{% endif %}
 <ul class="items">
-	{% for item in user.items %}
+	{% set rate_per_item = torn.api_limit / user.items|length %}
+	{% set interval = (1.0 / rate_per_item)|round(2, "ceil") %}
+	{% for item_id, item in user.items %}
 	<li class="item stopped" 
-		data-itemalarm-id="{{ item.id }}"
+		data-itemalarm-id="{{ item_id }}"
 		data-itemalarm-bargains="" 
 		data-itemalarm-alarm-price="{{ item.alarm_price }}"
 		data-itemalarm-trade-price="{{ item.trade_price }}"
-		data-itemalarm-interval="{{ item.interval }}">
+		data-itemalarm-market-value="{{ items[item_id].market_value }}" 
+		data-itemalarm-interval="{{ interval }}">
 		<div class="controls">
 			<button class="start">
 				<span class="icon">▶</span>
@@ -151,12 +160,14 @@ window.addEventListener("load", () => {
 			</button>
 		</div>
 		<div class="image">
-			<img src="https://www.torn.com/images/items/{{ item.id }}/large.png">
+			<img src="{{ items[item_id].image }}">
 		</div>
 		<div class="info">
-			<span class="name">{{ item.name }}</span>
-			<span class="alarm_price">🔔 ${{ item.alarm_price }}</span>
-			<span class="trade_price">💰 ${{ item.trade_price }}</span>
+			{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
+			{% set alarm_value = item.alarm_price ? item.alarm_price : (trade_value * 0.85)|round %}
+			<span class="name">{{ items[item_id].name }}</span>
+			<span class="alarm_price">🔔 ${{ alarm_value }}</span>
+			<span class="trade_price">💰 ${{ trade_value }}</span>
 		</div>
 		<div class="alarm">
 			<div class="bargain">
@@ -165,7 +176,7 @@ window.addEventListener("load", () => {
 			</div>
 		</div>
 		<div class="actions">
-			<a class="button" href="{{ torn.market_link}}{{ item.id }}" target="_blank">
+			<a class="button" href="{{ torn.market_link }}{{ item_id }}" target="_blank">
 				<span class="icon">🛒</span>
 				<span class="label">To Market</span>
 			</a>
@@ -173,6 +184,28 @@ window.addEventListener("load", () => {
 	</li>
 	{% endfor %}
 </ul>
+</div>
+<script>
+	function on_items_edit_toggle(details)
+	{
+		let items_panel = document.querySelector(".items-panel");
+		if (!items_panel) return;
+
+		items_panel.classList.toggle("edit");
+	}
+
+	window.addEventListener("load", (event) => {
+		let inputs = new Inputs({ "name": "items-edit-toggle", "callback": on_items_edit_toggle });
+		inputs.init();
+	});
+</script>
+</section>
+
+<section class="add-item">
+<div class="head">
+	<h2 class="heading">Add Items</h2>
+</div>
+<div class="body">
 <form action="/add-item" method="post">
 <fieldset>
 	<select name="add-item-id" id="add-item-id">
@@ -186,23 +219,12 @@ window.addEventListener("load", () => {
 	</button>
 </fieldset>
 </form>
-<script>
-	function on_items_input(details)
-	{
-		console.log(details);
-	}
-
-	window.addEventListener("load", (event) => {
-		let inputs = new Inputs({ "name": "items", "callback": on_items_input });
-		inputs.init();
-	});
-</script>
 </div>
 </section>
 
 <section class="settings-panel">
 <div class="head">
-	<h2>Settings</h2>
+	<h2 class="heading">Settings</h2>
 </div>
 <div class="body">
 	<audio id="sound" preload="auto" src="/audio/545365__stwime__idk2.mp3"></audio>
@@ -210,16 +232,19 @@ window.addEventListener("load", () => {
 		<label for="sound_volume">Volume</label>
 		<input type="range" id="sound_volume">
 	</fieldset>
+{#
 	<fieldset>
 		<label for="dynamic_prices">Use market values</label>
 		<input type="checkbox" id="dynamic_prices">
 	</fieldset>
+#}
 </div>
 </section>
 
+{#
 <section class="info">
 <div class="head">
-	<h2>Info</h2>
+	<h2 class="heading">Info</h2>
 </div>
 <div class="body">
 	<ul>
@@ -241,6 +266,6 @@ window.addEventListener("load", () => {
 	</ul>
 </div>
 </section>
-
+#}
 
 {% endblock %}

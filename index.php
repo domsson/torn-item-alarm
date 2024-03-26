@@ -44,8 +44,8 @@ if (!$user)
 	$user["sid"] = $sid;
 }
 
-yon_dump_var($user);
-yon_dump_var($user_filepath);
+//yon_dump_var($user);
+//yon_dump_var($user_filepath);
 
 //
 // For convenience
@@ -63,6 +63,7 @@ function save_user_data_to_file($user, $filename_prop="player_id")
 {
 	if (!isset($user[$filename_prop]))
 	{
+		echo "shittybitty";
 		return false;
 	}
 	$filepath = USER_DIR . "/" . $user[$filename_prop] . ".json";
@@ -103,6 +104,7 @@ if ($items === false && $api_key)
 	if ($item_info && isset($item_info["items"]))
 	{
 		$items = $item_info["items"];
+		echo "saving item info to " . $torn_items_filepath;
 		yon_json_file_save($torn_items_filepath, $items); 
 	}
 }
@@ -127,8 +129,7 @@ if ($uri["slug"] == "login")
 	$user["name"]      = $user_info["name"];
 	save_user_data_to_file($user);
 
-	echo "huhuiahua";
-	//yon_redirect($base_url);
+	yon_redirect($base_url);
 }
 
 if ($uri["slug"] == "logout")
@@ -146,9 +147,10 @@ if ($uri["slug"] == "add-item")
 	{
 		if (!isset($user["items"])) $user["items"] = [];
 		$user["items"][$item_id] = [];
+		yon_dump_var($user);
 		save_user_data_to_file($user);
-		yon_redirect($uri["base"]);
 	}
+	//yon_redirect($base_url);
 }
 
 // 

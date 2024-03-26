@@ -115,6 +115,8 @@ section {
 }
 
 section .head {
+	display: flex;
+	align-items: center;
 	padding: var(--gap-m);
 	background: linear-gradient(0, #333, #555);
 	border-bottom: 1px solid #222;
@@ -221,7 +223,9 @@ section .body {
 	border: 1px solid #111;
 	border-radius: var(--border-radius);
 	outline: none;
+	cursor: pointer;
 }
+
 .button:hover, button:hover {
 	background: linear-gradient(0, #555, #333);
 }
@@ -308,6 +312,36 @@ fieldset label {
 
 fieldset input {
 	flex-grow: 2;
+}
+
+input[type="text"],
+input[type="password"],
+select,
+option {
+	padding: var(--gap-m);
+	color: var(--color-panel-fg);
+	background: #111;
+	border: 1px solid #666;
+	border-radius: var(--border-radius);
+}
+
+.head .heading {
+	flex-grow: 1;
+}
+
+.head button {
+	padding: 0 var(--gap-m);
+	min-width: initial;
+	border: none;
+	background: none;
+}
+
+.head button .icon {
+	margin: 0;
+}
+
+[data-inputs-event="click"] {
+	cursor: pointer;
 }
 
 @media (width <= 30rem) {
