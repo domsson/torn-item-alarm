@@ -109,13 +109,21 @@ window.addEventListener("load", () => {
 	<h2>Login</h2>
 </div>
 <div class="body">
+{% if user.player_id %}
+	<form action="/logout" method="post">
+		<label for="api-key">{{ user.name }}</label>
+		<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
+		<button type="submit"><span class="label">Logout</span></button>
+	</form>
+{% else %}
 	<form action="/login" method="post">
 	<fieldset>
 		<label for="api-key">API Key</label>
 		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
-		<button type="submit"><span class="label">Set</span></button>
+		<button type="submit"><span class="label">Login</span></button>
 	</fieldset>
 	</form>
+{% endif %}
 </div>
 </section>
 

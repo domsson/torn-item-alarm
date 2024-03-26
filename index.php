@@ -26,15 +26,17 @@ $torn = yon_json_file_load(CONFIG_DIR . "/torn.json");
 // $user = $_SERVER["REMOTE_USER"] ?? $_SERVER["PHP_AUTH_USER"];
 $info = [];
 
+// TODO figure out while yon sees the URL as https (when it should be http)
+// 	and once that's fixed, use $uri["base"] for the redirect!
+$base_url = "http://itemalarm.halfpast.one";
 //yon_dump_var($uri);
 
 //
 // check if we have a user record (based on session ID)
 //
 
-$user_dir = USER_DIR;
 $user_filepath = null;
-$user = yon_json_find_file_by_prop($user_dir, "sid", $sid, $user_filepath);
+$user = yon_json_find_file_by_prop(USER_DIR, "sid", $sid, $user_filepath);
 
 if (!$user)
 {
@@ -43,27 +45,42 @@ if (!$user)
 }
 
 yon_dump_var($user);
+yon_dump_var($user_filepath);
+
+//
+// For convenience
+//
 
 $api_key   = $user["api_key"] ?? null;
 $api_url   = $torn["api_url"];
 $api_limit = $torn["api_limit"];
 
 //
-// functions
+// Functions
 //
 
-function save_user_data_to_file($user)
+function save_user_data_to_file($user, $filename_prop="player_id")
 {
-	if (!isset($user["api_key"]))
+	if (!isset($user[$filename_prop]))
 	{
 		return false;
 	}
-	$filepath = USER_DIR . "/" . $user["api_key"] . ".json";
+	$filepath = USER_DIR . "/" . $user[$filename_prop] . ".json";
 	return yon_json_file_save($filepath, $user);
 }
 
+function torn_fetch_user_info($api_url, $api_key)
+{
+	return yon_http_get("{$api_url}/user/?selections=basic&key={$api_key}", null);
+}
+
+function torn_fetch_item_info($api_url, $api_key)
+{
+	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
+}
+
 //
-// DUDE! WE CAN GETCH USER ID EVEN WITH PUBLIC KEY!
+// DUDE! WE CAN FETCH USER ID EVEN WITH PUBLIC KEY!
 // https://api.torn.com/user/?selections=basic&key=
 // $result["name"] = domsson
 // $result["player_id"] = 3206827
@@ -77,12 +94,11 @@ function save_user_data_to_file($user)
 //
 
 $torn_items_filepath = TORN_DIR . "/items.json";
-//$torn_items_filepath = ROOT_DIR + "/" + TORN_DIR + "/items.json";
 $items = yon_json_file_load($torn_items_filepath);
 
 if ($items === false && $api_key)
 {
-	$item_info = yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
+	$item_info = torn_fetch_item_info($api_url, $api_key);
 
 	if ($item_info && isset($item_info["items"]))
 	{
@@ -93,15 +109,34 @@ if ($items === false && $api_key)
 
 if ($uri["slug"] == "login")
 {
-	if (isset($_POST["api-key"]))
+	$api_key = $_POST["api-key"] ?? "";
+	$api_key = filter_var($_POST["api-key"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	if (empty($api_key))
 	{
-		$api_key = filter_var($_POST["api-key"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-		$user["api_key"] = $api_key;
-		save_user_data_to_file($user);
-		// TODO figure out while yon sees the URL as https (when it should be http)
-		// 	and once that's fixed, use $uri["base"] for the redirect!
+		yon_redirect("{$base_url}?login=failed&error=no_api_key");
 	}
-	yon_redirect("http://itemalarm.halfpast.one");
+
+	$user_info = torn_fetch_user_info($api_url, $api_key);
+	if (!$user_info or !isset($user_info["player_id"]))
+	{
+		yon_redirect("{$base_url}?login=failed&error=cant_fetch_user_info");
+	}
+
+	$user["api_key"]   = $api_key;
+	$user["player_id"] = $user_info["player_id"];
+	$user["name"]      = $user_info["name"];
+	save_user_data_to_file($user);
+
+	echo "huhuiahua";
+	//yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "logout")
+{
+	unset($user["api_key"]);
+	unset($user["name"]);
+	save_user_data_to_file($user);
+	yon_redirect($base_url);
 }
 
 if ($uri["slug"] == "add-item")
