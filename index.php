@@ -75,6 +75,11 @@ function torn_fetch_user_info($api_url, $api_key)
 	return yon_http_get("{$api_url}/user/?selections=basic&key={$api_key}", null);
 }
 
+function torn_fetch_user_profile($api_url, $api_key)
+{
+	return yon_http_get("{$api_url}/user/?selections=profile&key={$api_key}", null);
+}
+
 function torn_fetch_item_info($api_url, $api_key)
 {
 	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
@@ -122,6 +127,12 @@ if ($uri["slug"] == "login")
 	if (!$user_info or !isset($user_info["player_id"]))
 	{
 		yon_redirect("{$base_url}?login=failed&error=cant_fetch_user_info");
+	}
+	
+	$user_profile = torn_fetch_user_profile($api_url, $api_key);
+	if ($user_profile && isset($user_profile["profile_image"]))
+	{
+		$user["profile_image"] = $user_profile["profile_image"];
 	}
 
 	$user["api_key"]   = $api_key;

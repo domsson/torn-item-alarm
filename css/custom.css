@@ -125,6 +125,7 @@ section .head {
 section .body {
 	display: flex;
 	flex-direction: column;
+	padding: var(--gap-m);
 }
 
 .head h2 {
@@ -133,11 +134,15 @@ section .body {
 	font-size: inherit;
 }
 
-.items {
+.item-list {
 	list-style: none;
 	display: flex;
 	flex-direction: column;
 	margin: 0;
+	padding: 0;
+}
+
+.items .body {
 	padding: 0;
 }
 
@@ -302,6 +307,8 @@ section .body {
 fieldset {
 	display: flex;
 	align-items: center;
+	margin: var(--gap-m);
+	padding: 0;
 	border: none;
 }
 
@@ -337,6 +344,27 @@ option {
 
 .head button .icon {
 	margin: 0;
+}
+
+.logout label {
+	display: flex;
+	align-items: center;
+}
+
+.profile-image {
+	width: 2rem;
+	height: 2rem;
+	object-fit: cover;
+	margin-right: var(--gap-l);
+	border-top: 1px solid #111;
+	border-left: 1px solid #111;
+	border-bottom: 1px solid #444;
+	border-right: 1px solid #444;
+	border-radius: 50%;
+}
+
+.username {
+	font-weight: bold;
 }
 
 [data-inputs-event="click"] {

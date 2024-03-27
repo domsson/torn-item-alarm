@@ -1,5 +1,7 @@
 {% extends "partials/base.html.twig" %}
 
+{% set logged_in = user and user.player_id and user.api_key %}
+
 {% block head %}
 <script src="js/inputs.js"></script>
 <script src="js/item-alarm.js"></script>
@@ -104,32 +106,41 @@ window.addEventListener("load", () => {
 
 {% block main %}
 
-<section class="login">
+<section class="account">
 <div class="head">
 	<h2 class="heading">User</h2>
 </div>
 <div class="body">
-{% if user.player_id %}
-	<form action="/logout" method="post">
-		<label for="api-key">{{ user.name }}</label>
-		<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
-		<button type="submit"><span class="label">Logout</span></button>
+{% if logged_in %}
+	<form class="logout" action="/logout" method="post">
+		<fieldset>
+			<label for="api-key">
+				{% if user.profile_image %}
+				<img class="profile-image" src="{{ user.profile_image }}" width="23" height="32">
+				{% endif %}
+				<span class="username">{{ user.name }}</span>
+			</label>
+			<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
+			<button type="submit"><span class="label">Logout</span></button>
+		</fieldset>
 	</form>
 {% else %}
-	<form action="/login" method="post">
+	<form class="login" action="/login" method="post">
 	<fieldset>
-		<label for="api-key">API Key</label>
-		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
-		<button type="submit"><span class="label">Login</span></button>
+		<fieldset>
+			<label for="api-key">API Key</label>
+			<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
+			<button type="submit"><span class="label">Login</span></button>
+		</fieldset>
 	</fieldset>
 	</form>
 {% endif %}
 </div>
 </section>
 
-{% if user.player_id %}
+{% if logged_in %}
 
-<section class="items-panel">
+<section class="items">
 <div class="head">
 	<h2 class="heading">Item Monitor</h2>
 	<button id="items-edit-toggle" data-inputs="items-edit-toggle" data-inputs-event="click">
@@ -140,7 +151,7 @@ window.addEventListener("load", () => {
 {% if user.items|length == 0 %}
 	<p>Currently no items on your watchlist.</p>
 {% endif %}
-<ul class="items">
+<ul class="item-list">
 	{% if user.items|length %}
 		{% set rate_per_item = torn.api_limit / user.items|length %}
 		{% set interval = (1.0 / rate_per_item)|round(2, "ceil") %}
@@ -206,7 +217,7 @@ window.addEventListener("load", () => {
 </section>
 
 {% endif %}
-{% if user.player_id %}
+{% if logged_in %}
 
 <section class="add-item">
 <div class="head">
@@ -230,7 +241,7 @@ window.addEventListener("load", () => {
 </section>
 
 {% endif %}
-{% if user.player_id %}
+{% if logged_in %}
 
 <section class="settings-panel">
 <div class="head">
