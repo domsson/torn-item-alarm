@@ -127,6 +127,8 @@ window.addEventListener("load", () => {
 </div>
 </section>
 
+{% if user.player_id %}
+
 <section class="items-panel">
 <div class="head">
 	<h2 class="heading">Item Monitor</h2>
@@ -139,8 +141,10 @@ window.addEventListener("load", () => {
 	<p>Currently no items on your watchlist.</p>
 {% endif %}
 <ul class="items">
-	{% set rate_per_item = torn.api_limit / user.items|length %}
-	{% set interval = (1.0 / rate_per_item)|round(2, "ceil") %}
+	{% if user.items|length %}
+		{% set rate_per_item = torn.api_limit / user.items|length %}
+		{% set interval = (1.0 / rate_per_item)|round(2, "ceil") %}
+	{% endif %}
 	{% for item_id, item in user.items %}
 	<li class="item stopped" 
 		data-itemalarm-id="{{ item_id }}"
@@ -201,6 +205,9 @@ window.addEventListener("load", () => {
 </script>
 </section>
 
+{% endif %}
+{% if user.player_id %}
+
 <section class="add-item">
 <div class="head">
 	<h2 class="heading">Add Items</h2>
@@ -222,6 +229,9 @@ window.addEventListener("load", () => {
 </div>
 </section>
 
+{% endif %}
+{% if user.player_id %}
+
 <section class="settings-panel">
 <div class="head">
 	<h2 class="heading">Settings</h2>
@@ -240,6 +250,8 @@ window.addEventListener("load", () => {
 #}
 </div>
 </section>
+
+{% endif %}
 
 {#
 <section class="info">
