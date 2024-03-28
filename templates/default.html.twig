@@ -127,11 +127,9 @@ window.addEventListener("load", () => {
 {% else %}
 	<form class="login" action="/login" method="post">
 	<fieldset>
-		<fieldset>
-			<label for="api-key">API Key</label>
-			<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
-			<button type="submit"><span class="label">Login</span></button>
-		</fieldset>
+		<label for="api-key">API Key</label>
+		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
+		<button type="submit"><span class="label">Login</span></button>
 	</fieldset>
 	</form>
 {% endif %}
@@ -164,6 +162,7 @@ window.addEventListener("load", () => {
 		data-itemalarm-trade-price="{{ item.trade_price }}"
 		data-itemalarm-market-value="{{ items[item_id].market_value }}" 
 		data-itemalarm-interval="{{ interval }}">
+		<div class="watch">
 		<div class="controls">
 			<button class="start">
 				<span class="icon">▶</span>
@@ -196,6 +195,37 @@ window.addEventListener("load", () => {
 				<span class="label">To Market</span>
 			</a>
 		</div>
+		</div>
+		<div class="edit">
+			<form class="edit-item" action="/edit-item" method="post">
+				<formgroup class="edit-alarm-price">
+					<label>Alarm price</label>
+					<select name="alarm-price-model">
+						<option value="profit-per-item">Profit per item</option>
+						{# <option value="profit-per-listing">Profit per listing</option> #}
+					</select>
+					<input type="number" name="alert-price">
+				</formgroup>
+				<formgroup class="edit-trade-price">
+					<label>Reference price</label>
+					<select name="trade-price-model">
+						<option value="manual-value">Manual value</option>
+						<option value="market-value">Market value</option>
+					</select>
+					<input type="number" name="trade-price">
+				</formgroup>
+				<formgroup>
+					<input type="hidden" name="item-id" value="{{ item_id }}">
+					<button type="submit"><span class="label">Save</span></button>
+				</formgroup>
+			</form>
+			<form class="delete-item" action="/remove-item" method="post">
+				<formgroup>
+					<input type="hidden" name="item-id" value="{{ item_id }}">
+					<button type="submit"><span class="label">Remove</span></button>
+				</formgroup>
+			</form>
+		</div>
 	</li>
 	{% endfor %}
 </ul>
@@ -203,7 +233,7 @@ window.addEventListener("load", () => {
 <script>
 	function on_items_edit_toggle(details)
 	{
-		let items_panel = document.querySelector(".items-panel");
+		let items_panel = document.querySelector(".items");
 		if (!items_panel) return;
 
 		items_panel.classList.toggle("edit");
@@ -226,7 +256,7 @@ window.addEventListener("load", () => {
 <div class="body">
 <form action="/add-item" method="post">
 <fieldset>
-	<select name="add-item-id" id="add-item-id">
+	<select name="item-id" id="add-item-id">
 		{% for key, item in items %}
 		<option value="{{ key }}">{{ item.name }}</option>
 		{% endfor %}

@@ -74,7 +74,6 @@ nav, aside, header, footer {
 	max-width: 100%;
 	min-width: 20rem;
 	margin: 0;
-	padding: var(--gap-m);
 }
 
 header {
@@ -108,6 +107,7 @@ main .content {
 
 section {
 	width: 100%;
+	min-width: calc(20rem - (var(--gap-m) *2));
 	overflow: auto;
 	color: var(--color-panel-fg);
 	background: var(--color-panel-bg);
@@ -148,17 +148,64 @@ section .body {
 
 .item {
 	display: flex;
+	flex-direction: column;
 	overflow: auto;
 	color: var(--color-panel-fg);
 	background: var(--color-panel-bg);
-	padding: var(--gap-m);
 	border-top: 1px solid #444;
 	border-bottom: 1px solid #222;
 }
 
-.item > div {
+.item .watch,
+.item .edit {
+	display: flex;
+	overflow: auto;
+	padding: var(--gap-m);
+}
+
+.item .controls,
+.item .image,
+.item .info, 
+.item .alarm,
+.item .actions {
 	display: flex;
 	margin: var(--gap-m);
+}
+
+.items .edit {
+	display: none;
+}
+
+.items.edit .watch {
+	border-bottom: 1px solid #222;
+}
+
+.items.edit .edit {
+	display: flex;
+	flex-direction: column;
+}
+
+.items .edit form {
+	display: flex;
+	flex-direction: column;
+	margin: var(--gap-m);
+	gap: var(--gap-m);
+}
+
+.items .edit-alarm-price,
+.items .edit-trade-price {
+	display: flex;
+	align-items: center;
+}
+
+.items .edit-alarm-price label,
+.items .edit-trade-price label {
+	flex-grow: 1;
+}
+
+.items .edit input,
+.items .edit select, 
+.items .edit option {
 }
 
 .item .info {
@@ -320,11 +367,11 @@ fieldset input {
 	flex-grow: 2;
 }
 
-input[type="text"],
-input[type="password"],
+input, 
 select,
 option {
 	padding: var(--gap-l);
+	font-size: inherit;
 	color: var(--color-panel-fg);
 	background: #111;
 	border: 1px solid #666;

@@ -28,7 +28,7 @@ $info = [];
 
 // TODO figure out while yon sees the URL as https (when it should be http)
 // 	and once that's fixed, use $uri["base"] for the redirect!
-$base_url = "http://itemalarm.halfpast.one";
+$base_url = "http://itemalarm-dev.halfpast.one";
 //yon_dump_var($uri);
 
 //
@@ -63,7 +63,6 @@ function save_user_data_to_file($user, $filename_prop="player_id")
 {
 	if (!isset($user[$filename_prop]))
 	{
-		echo "shittybitty";
 		return false;
 	}
 	$filepath = USER_DIR . "/" . $user[$filename_prop] . ".json";
@@ -123,6 +122,10 @@ if ($uri["slug"] == "login")
 		yon_redirect("{$base_url}?login=failed&error=no_api_key");
 	}
 
+	// try to find file by API key
+	$user_filepath = null;
+	$user = yon_json_find_file_by_prop(USER_DIR, "api_key", $api_key, $user_filepath);
+
 	$user_info = torn_fetch_user_info($api_url, $api_key);
 	if (!$user_info or !isset($user_info["player_id"]))
 	{
@@ -135,10 +138,11 @@ if ($uri["slug"] == "login")
 		$user["profile_image"] = $user_profile["profile_image"];
 	}
 
+	$user["sid"]       = $sid;
 	$user["api_key"]   = $api_key;
 	$user["player_id"] = $user_info["player_id"];
 	$user["name"]      = $user_info["name"];
-	save_user_data_to_file($user);
+	$saves = save_user_data_to_file($user);
 
 	yon_redirect($base_url);
 }
@@ -153,15 +157,47 @@ if ($uri["slug"] == "logout")
 
 if ($uri["slug"] == "add-item")
 {
-	$item_id = (int) filter_var($_POST["add-item-id"], FILTER_SANITIZE_NUMBER_INT);
+	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
 	if ($user)
 	{
 		if (!isset($user["items"])) $user["items"] = [];
-		$user["items"][$item_id] = [];
-		yon_dump_var($user);
+		$user["items"][$item_id] = [
+			"alarm-price-model" => "profit-per-item",
+			"trade-price-model" => "market-value"
+		];
 		save_user_data_to_file($user);
 	}
-	//yon_redirect($base_url);
+	yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "remove-item")
+{
+	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
+	if ($user && isset($user["items"][$item_id]))
+	{
+		unset($user["items"][$item_id]);
+		save_user_data_to_file($user);
+	}
+	yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "edit-item")
+{
+	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
+	$alarm_price = (int) filter_var($_POST["alarm-price"], FILTER_SANITIZE_NUMBER_INT);
+	$trade_price = (int) filter_var($_POST["trade-price"], FILTER_SANITIZE_NUMBER_INT);
+	$alarm_price_mode = filter_var($_POST["alarm-price-model"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	$trade_price_mode = filter_var($_POST["trade-price-model"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+	if ($user && isset($user["items"][$item_id]))
+	{
+		if ($alarm_price) $user["items"][$item_id]["alarm-price"] = $alarm_price;
+		if ($trade_price) $user["items"][$item_id]["trade-price"] = $trade_price;
+		if ($alarm_price_model) $user["items"][$item_id]["alarm-price-model"] = $alarm_price_model;
+		if ($trade_price_model) $user["items"][$item_id]["trade-price-model"] = $trade_price_model;
+		save_user_data_to_file($user);
+	}
+	yon_redirect($base_url);
 }
 
 // 
