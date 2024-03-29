@@ -119,6 +119,7 @@ window.addEventListener("load", () => {
 				<img class="profile-image" src="{{ user.profile_image }}" width="23" height="32">
 				{% endif %}
 				<span class="username">{{ user.name }}</span>
+				<span class="faction">{{ user.faction.faction_name }}</span>
 			</label>
 			<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
 			<button type="submit"><span class="label">Logout</span></button>
@@ -177,8 +178,8 @@ window.addEventListener("load", () => {
 			<img src="{{ items[item_id].image }}">
 		</div>
 		<div class="info">
-			{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
 			{% set alarm_value = item.alarm_price ? item.alarm_price : (trade_value * 0.85)|round %}
+			{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
 			<span class="name">{{ items[item_id].name }}</span>
 			<span class="alarm_price">🔔 ${{ alarm_value }}</span>
 			<span class="trade_price">💰 ${{ trade_value }}</span>
@@ -201,28 +202,35 @@ window.addEventListener("load", () => {
 				<formgroup class="edit-alarm-price">
 					<label>Alarm price</label>
 					<select name="alarm-price-model">
-						<option value="profit-per-item">Profit per item</option>
+						<option value="manual-value">Manual value</option>
+						{# <option value="profit-per-item">Profit per item</option> #}
 						{# <option value="profit-per-listing">Profit per listing</option> #}
 					</select>
-					<input type="number" name="alert-price">
+					<input type="number" name="alarm-price" {% if item.alarm_price %}value="{{ item.alarm_price }}"{% endif %}>
 				</formgroup>
 				<formgroup class="edit-trade-price">
 					<label>Reference price</label>
 					<select name="trade-price-model">
 						<option value="manual-value">Manual value</option>
-						<option value="market-value">Market value</option>
+						{# <option value="market-value">Market value</option> #}
 					</select>
-					<input type="number" name="trade-price">
+					<input type="number" name="trade-price" {% if item.trade_price %}value="{{ item.trade_price }}"{% endif %}>
 				</formgroup>
-				<formgroup>
+				<formgroup class="edit-item-save">
 					<input type="hidden" name="item-id" value="{{ item_id }}">
-					<button type="submit"><span class="label">Save</span></button>
+					<button type="submit">
+						<span class="icon">💾</span>
+						<span class="label">Save</span>
+					</button>
 				</formgroup>
 			</form>
 			<form class="delete-item" action="/remove-item" method="post">
 				<formgroup>
 					<input type="hidden" name="item-id" value="{{ item_id }}">
-					<button type="submit"><span class="label">Remove</span></button>
+					<button type="submit">
+						<span class="icon">🗑️</span>
+						<span class="label">Remove</span>
+					</button>
 				</formgroup>
 			</form>
 		</div>
