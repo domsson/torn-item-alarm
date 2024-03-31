@@ -20,10 +20,12 @@ $encoding = yon_setup_utf8();
 $sid      = yon_setup_session();
 $uri      = yon_parse_url();
 $twig     = yon_setup_twig(TEMPLATE_DIR);
+$time     = time();
 
-$page = yon_json_file_load(CONFIG_DIR . "/page.json");
-$torn = yon_json_file_load(CONFIG_DIR . "/torn.json");
-// $user = $_SERVER["REMOTE_USER"] ?? $_SERVER["PHP_AUTH_USER"];
+$page      = yon_json_file_load(CONFIG_DIR . "/page.json");
+$torn      = yon_json_file_load(CONFIG_DIR . "/torn.json");
+$whitelist = yon_json_file_load(CONFIG_DIR . "/whitelist.json");
+
 $info = [];
 
 // TODO figure out while yon sees the URL as https (when it should be http)
@@ -36,7 +38,7 @@ $base_url = "http://itemalarm.halfpast.one";
 //
 
 $user_filepath = null;
-$user = yon_json_find_file_by_prop(USER_DIR, "sid", $sid, $user_filepath);
+$user = yon_json_find_newest_file_by_prop(USER_DIR, "sid", $sid, $user_filepath);
 
 if (!$user)
 {
@@ -63,7 +65,6 @@ function save_user_data_to_file($user, $filename_prop="player_id")
 {
 	if (!isset($user[$filename_prop]))
 	{
-		echo "shittybitty";
 		return false;
 	}
 	$filepath = USER_DIR . "/" . $user[$filename_prop] . ".json";
@@ -72,28 +73,21 @@ function save_user_data_to_file($user, $filename_prop="player_id")
 
 function torn_fetch_user_info($api_url, $api_key)
 {
-	return yon_http_get("{$api_url}/user/?selections=basic&key={$api_key}", null);
+	return yon_http_get("{$api_url}/user/?selections=basic&key={$api_key}&comment=itemalarm", null);
 }
 
 function torn_fetch_user_profile($api_url, $api_key)
 {
-	return yon_http_get("{$api_url}/user/?selections=profile&key={$api_key}", null);
+	return yon_http_get("{$api_url}/user/?selections=profile&key={$api_key}&comment=itemalarm", null);
 }
 
 function torn_fetch_item_info($api_url, $api_key)
 {
-	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
+	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}&comment=itemalarm", null);
 }
 
-//
-// DUDE! WE CAN FETCH USER ID EVEN WITH PUBLIC KEY!
-// https://api.torn.com/user/?selections=basic&key=
-// $result["name"] = domsson
-// $result["player_id"] = 3206827
-//
-// Can also get profile image:
-// https://api.torn.com/user/?selections=profile&key=
-// $result["profile_image"] = "https://profileimages.torn.com/3c701333-7063-4911-b5d2-438fc767ec24-3206827.png"
+// TODO also check if they are member of recruit of faction
+//		"days_in_faction": 56,
 
 //
 // fetch item names and add them to the item JSON (TODO cache this!)
@@ -102,6 +96,11 @@ function torn_fetch_item_info($api_url, $api_key)
 $torn_items_filepath = TORN_DIR . "/items.json";
 $items = yon_json_file_load($torn_items_filepath);
 
+// Invalidate items if the file is older than an hour
+$items_age = $time - filemtime($torn_items_filepath);
+if ($items_age > 3600) $items = false;
+
+// TODO we also need to do this is the file on hand is too old (an hour or so?)
 if ($items === false && $api_key)
 {
 	$item_info = torn_fetch_item_info($api_url, $api_key);
@@ -109,7 +108,6 @@ if ($items === false && $api_key)
 	if ($item_info && isset($item_info["items"]))
 	{
 		$items = $item_info["items"];
-		echo "saving item info to " . $torn_items_filepath;
 		yon_json_file_save($torn_items_filepath, $items); 
 	}
 }
@@ -123,23 +121,37 @@ if ($uri["slug"] == "login")
 		yon_redirect("{$base_url}?login=failed&error=no_api_key");
 	}
 
+
 	$user_info = torn_fetch_user_info($api_url, $api_key);
 	if (!$user_info or !isset($user_info["player_id"]))
 	{
 		yon_redirect("{$base_url}?login=failed&error=cant_fetch_user_info");
 	}
-	
-	$user_profile = torn_fetch_user_profile($api_url, $api_key);
-	if ($user_profile && isset($user_profile["profile_image"]))
-	{
-		$user["profile_image"] = $user_profile["profile_image"];
-	}
 
+	// try to find existing file by player_id, if they've logged in with same API key before
+	$user_filepath = null;
+	$user = yon_json_find_file_by_prop(USER_DIR, "player_id", $user_info["player_id"], $user_filepath);
+	if (!$user) $user = [];
+
+	$user["sid"]       = $sid;
 	$user["api_key"]   = $api_key;
 	$user["player_id"] = $user_info["player_id"];
 	$user["name"]      = $user_info["name"];
-	save_user_data_to_file($user);
 
+	$user_profile = torn_fetch_user_profile($api_url, $api_key);
+	if ($user_profile)
+	{
+		if (isset($user_profile["profile_image"]))
+		{
+			$user["profile_image"] = $user_profile["profile_image"];
+		}
+		if (isset($user_profile["faction"]))
+		{
+			$user["faction"] = $user_profile["faction"];
+		}
+	}
+
+	$saves = save_user_data_to_file($user);
 	yon_redirect($base_url);
 }
 
@@ -147,21 +159,87 @@ if ($uri["slug"] == "logout")
 {
 	unset($user["api_key"]);
 	unset($user["name"]);
-	save_user_data_to_file($user);
+	unset($user["faction"]);
+	$save = save_user_data_to_file($user);
 	yon_redirect($base_url);
 }
 
 if ($uri["slug"] == "add-item")
 {
-	$item_id = (int) filter_var($_POST["add-item-id"], FILTER_SANITIZE_NUMBER_INT);
+	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
 	if ($user)
 	{
 		if (!isset($user["items"])) $user["items"] = [];
-		$user["items"][$item_id] = [];
-		yon_dump_var($user);
+		$user["items"][$item_id] = [
+			"alarm-price-model" => "market-value",
+			"trade-price-model" => "market-value"
+		];
 		save_user_data_to_file($user);
 	}
-	//yon_redirect($base_url);
+	yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "remove-item")
+{
+	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
+	if ($user && isset($user["items"][$item_id]))
+	{
+		unset($user["items"][$item_id]);
+		save_user_data_to_file($user);
+	}
+	yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "edit-item")
+{
+//	yon_dump_var($_POST);
+
+	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
+	$alarm_price = (int) filter_var($_POST["alarm-price"], FILTER_SANITIZE_NUMBER_INT);
+	$trade_price = (int) filter_var($_POST["trade-price"], FILTER_SANITIZE_NUMBER_INT);
+	$alarm_price_model = filter_var($_POST["alarm-price-model"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	$trade_price_model = filter_var($_POST["trade-price-model"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+	if ($user && isset($user["items"][$item_id]))
+	{
+		if ($alarm_price) $user["items"][$item_id]["alarm_price"] = $alarm_price;
+		if ($trade_price) $user["items"][$item_id]["trade_price"] = $trade_price;
+		if ($alarm_price_model) $user["items"][$item_id]["alarm_price_model"] = $alarm_price_model;
+		if ($trade_price_model) $user["items"][$item_id]["trade_price_model"] = $trade_price_model;
+		save_user_data_to_file($user);
+	}
+	yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "settings")
+{
+	
+}
+
+//
+// Check user access based on whitelist
+//
+
+$user["access"] = false;
+if ($whitelist)
+{
+	if (isset($whitelist["players"]) && is_array($whitelist["players"]))
+	{
+		if (in_array($user["player_id"], $whitelist["players"]))
+		{
+			$user["access"] = true;
+		}
+	}
+	if (isset($whitelist["factions"]) && is_array($whitelist["factions"]))
+	{
+		if (isset($user["faction"]) && isset($user["faction"]["faction_id"]))
+		{
+			if (in_array($user["faction"]["faction_id"], $whitelist["factions"]))
+			{
+				$user["access"] = true;
+			}
+		}
+	}
 }
 
 // 

@@ -7,6 +7,67 @@
 <script src="js/item-alarm.js"></script>
 <script>
 
+function req_per_min_to_req_per_sec(req_per_min)
+{
+	return req_per_min / 60.0;
+}
+
+function req_per_sec_to_req_per_min(req_per_sec)
+{
+	return req_per_sec * 60.0;
+}
+
+function req_per_sec_to_interval(req_per_sec)
+{
+	return 1.0 / req_per_sec;
+}
+
+function interval_to_req_per_sec(interval)
+{
+	return 1.0 / interval;
+}
+
+function adjust_all_item_intervals()
+{
+	let ratelimit = document.querySelector("#api_ratelimit");
+	if (!ratelimit) return false;
+
+	let req_per_min = ratelimit.value;
+
+	//console.log("Adjusting item intervals based on a rate limit of " + req_per_min + " req/min");
+
+	let items = document.querySelectorAll(".item");
+	adjust_item_intervals(items, req_per_min);
+
+	let items_active = document.querySelectorAll(".item.started");
+	adjust_item_intervals(items_active, req_per_min);
+
+}
+
+function adjust_item_intervals(items, req_per_min)
+{
+	if (!items) return false;
+
+	let item_count = items.length;
+	//console.log("Adjusting intervals for " + item_count + " items");
+	if (item_count == 0) return false;
+
+	let interval = 0;
+	if (req_per_min > 0)
+	{
+		let req_per_sec = req_per_min_to_req_per_sec(req_per_min);
+		let req_per_sec_per_item = req_per_sec / item_count; 
+		interval = req_per_sec_to_interval(req_per_sec_per_item);
+	}
+
+	console.log("Interval: " + interval + " (Items: " + item_count + ")");
+
+	for (let item of items)
+	{
+		item.setAttribute("data-itemalarm-interval", interval);
+	}
+}
+
 function itemalarm_cb(item, bargains, quantity, dirty)
 {
 	console.log("Bargains for " + item.id + ": " + quantity);
@@ -22,21 +83,6 @@ function itemalarm_cb(item, bargains, quantity, dirty)
 	let profit_info = item.element.querySelector(".profit");
 	profit_info.textContent = profit;
 
-	/*
-	if (item_hot)
-	{
-		console.log(bargains);
-		if (!was_hot)
-		{
-			let audio = document.querySelector("#sound");
-			let volume = document.querySelector("#sound_volume");
-			let vol_value = parseInt(volume.value) / 100.0;
-			console.log("Playing notification sound at " + vol_value + "% volume");
-			audio.volume = vol_value;
-			audio.play();
-		}
-	}
-	*/
 	if (dirty)
 	{
 		let audio = document.querySelector("#sound");
@@ -62,14 +108,7 @@ function calculate_profit(item, bargains)
 	return profit;
 }
 
-function inputs_cb(details)
-{
-}
-
-window.addEventListener("load", () => {
-	let inputs = new Inputs({ "callback": inputs_cb });
-	inputs.init();
-	inputs.fire();
+window.addEventListener("load", (event) => {
 
 	let audio = document.querySelector("#sound");
 
@@ -90,6 +129,7 @@ window.addEventListener("load", () => {
 			let is_running = alarm.is_running();
 			item.classList.toggle("started", is_running);
 			item.classList.toggle("stopped", !is_running);
+			adjust_all_item_intervals();			
 		});
 		let stop = item.querySelector(".stop");
 		stop.addEventListener("click", (event) => {
@@ -97,6 +137,7 @@ window.addEventListener("load", () => {
 			let is_running = alarm.is_running();
 			item.classList.toggle("started", is_running);
 			item.classList.toggle("stopped", !is_running);
+			adjust_all_item_intervals();
 		});
 	}
 });
@@ -119,6 +160,7 @@ window.addEventListener("load", () => {
 				<img class="profile-image" src="{{ user.profile_image }}" width="23" height="32">
 				{% endif %}
 				<span class="username">{{ user.name }}</span>
+				<span class="faction">{{ user.faction.faction_name }}</span>
 			</label>
 			<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
 			<button type="submit"><span class="label">Logout</span></button>
@@ -127,11 +169,9 @@ window.addEventListener("load", () => {
 {% else %}
 	<form class="login" action="/login" method="post">
 	<fieldset>
-		<fieldset>
-			<label for="api-key">API Key</label>
-			<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
-			<button type="submit"><span class="label">Login</span></button>
-		</fieldset>
+		<label for="api-key">API Key</label>
+		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
+		<button type="submit"><span class="label">Login</span></button>
 	</fieldset>
 	</form>
 {% endif %}
@@ -164,6 +204,7 @@ window.addEventListener("load", () => {
 		data-itemalarm-trade-price="{{ item.trade_price }}"
 		data-itemalarm-market-value="{{ items[item_id].market_value }}" 
 		data-itemalarm-interval="{{ interval }}">
+		<div class="watch">
 		<div class="controls">
 			<button class="start">
 				<span class="icon">▶</span>
@@ -196,6 +237,44 @@ window.addEventListener("load", () => {
 				<span class="label">To Market</span>
 			</a>
 		</div>
+		</div>
+		<div class="edit">
+			<form class="edit-item" action="/edit-item" method="post">
+				<formgroup class="edit-alarm-price">
+					<label>Alarm price</label>
+					<select name="alarm-price-model">
+						<option value="manual-value">Manual value</option>
+						{# <option value="profit-per-item">Profit per item</option> #}
+						{# <option value="profit-per-listing">Profit per listing</option> #}
+					</select>
+					<input type="number" name="alarm-price" {% if item.alarm_price %}value="{{ item.alarm_price }}"{% endif %}>
+				</formgroup>
+				<formgroup class="edit-trade-price">
+					<label>Reference price</label>
+					<select name="trade-price-model">
+						<option value="manual-value">Manual value</option>
+						{# <option value="market-value">Market value</option> #}
+					</select>
+					<input type="number" name="trade-price" {% if item.trade_price %}value="{{ item.trade_price }}"{% endif %}>
+				</formgroup>
+				<formgroup class="edit-item-save">
+					<input type="hidden" name="item-id" value="{{ item_id }}">
+					<button type="submit">
+						<span class="icon">💾</span>
+						<span class="label">Save</span>
+					</button>
+				</formgroup>
+			</form>
+			<form class="delete-item" action="/remove-item" method="post">
+				<formgroup>
+					<input type="hidden" name="item-id" value="{{ item_id }}">
+					<button type="submit">
+						<span class="icon">🗑️</span>
+						<span class="label">Remove</span>
+					</button>
+				</formgroup>
+			</form>
+		</div>
 	</li>
 	{% endfor %}
 </ul>
@@ -203,7 +282,7 @@ window.addEventListener("load", () => {
 <script>
 	function on_items_edit_toggle(details)
 	{
-		let items_panel = document.querySelector(".items-panel");
+		let items_panel = document.querySelector(".items");
 		if (!items_panel) return;
 
 		items_panel.classList.toggle("edit");
@@ -226,7 +305,8 @@ window.addEventListener("load", () => {
 <div class="body">
 <form action="/add-item" method="post">
 <fieldset>
-	<select name="add-item-id" id="add-item-id">
+	<select name="item-id" id="add-item-id">
+		<option value="">(please select)</option>
 		{% for key, item in items %}
 		<option value="{{ key }}">{{ item.name }}</option>
 		{% endfor %}
@@ -248,10 +328,25 @@ window.addEventListener("load", () => {
 	<h2 class="heading">Settings</h2>
 </div>
 <div class="body">
+	{% set api_ratelimit = user.api_ratelimit ? user.api_ratelimit : 60 %}
+	{% set sound_volume = user.sound_volume ? user.sound_volume : 50 %}
+	<p>Your API rate limit across all API keys is 100 requests/minute.<br> If you use other tools, like Yata, <strong>definitely</strong> keep the limit here below 100.</p>
 	<audio id="sound" preload="auto" src="/audio/545365__stwime__idk2.mp3"></audio>
 	<fieldset>
+		<label for="api_ratelimit">API rate limit</label>
+		<input type="range" id="api_ratelimit" name="api_ratelimit" step="1" min="0" max="100" value="{{ api_ratelimit }}" data-inputs="settings" data-inputs-event="input">
+		<output for="api_ratelimit">
+			<span class="value">{{ api_ratelimit }}</span>
+			<span class="unit">req/min</span>
+		</output>
+	</fieldset>
+	<fieldset>
 		<label for="sound_volume">Volume</label>
-		<input type="range" id="sound_volume">
+		<input type="range" id="sound_volume" name="sound_volume" step="1" min="0" max="100" value="{{ sound_volume }}" data-inputs="settings" data-inputs-event="input">
+		<output for="sound_volume">
+			<span class="value">{{ sound_volume }}</span>
+			<span class="unit">%</span>
+		</output>
 	</fieldset>
 {#
 	<fieldset>
@@ -260,6 +355,31 @@ window.addEventListener("load", () => {
 	</fieldset>
 #}
 </div>
+<script>
+window.addEventListener("load", (event) => {
+
+	function on_settings_input(details)
+	{
+		let id = details.id;
+		if (!id) return;
+
+		let output = document.querySelector('output[for="'+id+'"] .value');
+		if (!output) return;
+
+		output.innerHTML = details.value;
+
+		if (id == "api_ratelimit")
+		{
+			adjust_all_item_intervals();
+		}
+	}
+
+	let inputs = new Inputs({"name": "settings", "callback": on_settings_input});
+	inputs.init();
+	inputs.fire();
+});
+
+</script>
 </section>
 
 {% endif %}

@@ -5,6 +5,7 @@ class ItemAlarm
 		this.api_url  = "https://api.torn.com/market/";
 		this.api_url += "{item_id}?selections=bazaar,itemmarket";
 		this.api_url += "&key={api_key}";
+		this.api_url += "&comment=itemalarm";
 
 		this.item_id  = item_id;
 		this.api_key  = api_key;
@@ -33,14 +34,6 @@ class ItemAlarm
 			console.warn("ItemAlarm: no callback function given");
 		}
 
-		/*
-		if (this.item.interval < 1)
-		{
-			this.item.interval = 1;
-			console.warn("ItemAlarm: interval too small, set to 1");
-		}
-		*/
-
 		this.ready = true;
 		return true;
 	}
@@ -49,15 +42,15 @@ class ItemAlarm
 	{
 		if (!this.ready) return false;
 		if (this.timer) this.stop();
-		let handler = this.query_market.bind(this);
-		this.timer = setInterval(handler, this.item.interval * 1000);
+		let handler = this.on_interval.bind(this);
+		this.timer = setTimeout(handler, this.item.interval * 1000);
 		return true;
 	}
 
 	stop()
 	{
 		if (!this.timer) return false;
-		clearInterval(this.timer);
+		clearTimeout(this.timer);
 		this.timer = null;
 		return true;
 	}
@@ -77,17 +70,26 @@ class ItemAlarm
 		let item_element = this.find_element();
 		if (!item_element) return false;
 
+		/*
 		let alarm_price = this.get_attr(item_element, "alarm-price");
 		let trade_price = this.get_attr(item_element, "trade-price");
 		let interval    = this.get_attr(item_element, "interval");
+		*/
 
 		this.item = {
 			"id": this.item_id,
-			"element": item_element,
-			"alarm_price": this.to_num(alarm_price, true),
-			"trade_price": this.to_num(trade_price, true),
-			"interval": this.to_num(interval)
+			"element": item_element
 		};
+
+		this.fetch_item_settings();
+	}
+
+	fetch_item_settings()
+	{
+		if (!this.item.element) return;
+		this.item["alarm_price"] = this.to_num(this.get_attr(this.item.element, "alarm-price"));
+		this.item["trade_price"] = this.to_num(this.get_attr(this.item.element, "trade-price"));
+		this.item["interval"]    = this.to_num(this.get_attr(this.item.element, "interval"));
 	}
 
 	find_element()
@@ -104,14 +106,6 @@ class ItemAlarm
 	on_market_response(request)
 	{
 		if (!request) return;
-
-		/*
-		let log = "";
-		log += "API response: ";
-		log += "readyState = " + request.readyState;
-		log += ", status = " + request.status;
-		console.log(log);
-		*/
 
 		/*
 		if (req.readyState == 4 && req.status == 200)
@@ -167,7 +161,7 @@ class ItemAlarm
 
 			bargains.push(listing.ID);
 		}
-	this.bargains = [...bargains];
+		this.bargains = [...bargains];
 		this.dirty = dirty;
 
 		this.callback(this.item, listings, quantity, dirty);
@@ -189,6 +183,25 @@ class ItemAlarm
 		}
 
 		return result;
+	}
+
+	on_interval()
+	{
+		// Make sure we have the newest settings
+		this.fetch_item_settings();
+	
+		// Query the market
+		this.query_market();
+
+		if (this.item.interval <= 0)
+		{
+			this.stop();
+			return;
+		}
+
+		// Start the timeout again
+		let handler = this.on_interval.bind(this);
+		this.timer = setTimeout(handler, this.item.interval * 1000);
 	}
 
 	query_market()

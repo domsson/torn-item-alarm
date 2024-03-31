@@ -100,7 +100,7 @@ function yon_json_del_entry($file, $id)
 	return yon_json_file_save($file, $json);
 }
 
-function yon_json_find_file_by_prop($dir, $prop_name, $prop_value, &$filepath)
+function yon_json_find_file_by_prop($dir, $prop_name, $prop_value, &$filepath=null)
 {
 	foreach (glob($dir . "/*.json") as $file)
 	{
@@ -119,6 +119,49 @@ function yon_json_find_file_by_prop($dir, $prop_name, $prop_value, &$filepath)
 	}
 
 	return null;
+}
+
+function yon_json_find_newest_file_by_prop($dir, $prop_name, $prop_value, &$filepath=null)
+{
+	$matches = [];
+
+	foreach (glob($dir . "/*.json") as $file)
+	{
+		$json = yon_json_file_load($file);
+
+		if (!isset($json[$prop_name]))
+		{
+			continue;
+		}
+
+		if ($json[$prop_name] === $prop_value)
+		{
+			$matches[] = [
+				"file" => $file,
+				"json" => $json,
+				"time" => filemtime($file)
+			];
+		}
+	}
+
+	$newest_index = -1;
+	$newest_time  = 0;
+	foreach ($matches as $index => $match)
+	{
+		if ($match["time"] > $newest_time)
+		{
+			$newest_index = $index;
+			$newest_time  = $match["time"];
+		}	
+	}
+
+	if ($newest_index == -1)
+	{
+		return null;
+	}
+
+	$filepath = $matches[$newest_index]["file"];
+	return $matches[$newest_index]["json"];
 }
 
 ?>
