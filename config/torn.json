@@ -1,6 +1,5 @@
 {
 	"api_url": "https://api.torn.com",
-	"api_key": "bcNz1mj6LedkuUoZ",
-	"api_limit": 1.2,
+	"api_limit": 1.5,
 	"market_link": "https://www.torn.com/imarket.php#/p=shop&type="
 }

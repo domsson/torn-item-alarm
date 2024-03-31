@@ -33,11 +33,13 @@ class ItemAlarm
 			console.warn("ItemAlarm: no callback function given");
 		}
 
+		/*
 		if (this.item.interval < 1)
 		{
 			this.item.interval = 1;
 			console.warn("ItemAlarm: interval too small, set to 1");
 		}
+		*/
 
 		this.ready = true;
 		return true;

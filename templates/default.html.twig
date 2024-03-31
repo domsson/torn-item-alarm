@@ -1,5 +1,7 @@
 {% extends "partials/base.html.twig" %}
 
+{% set logged_in = user and user.player_id and user.api_key %}
+
 {% block head %}
 <script src="js/inputs.js"></script>
 <script src="js/item-alarm.js"></script>
@@ -72,7 +74,7 @@ window.addEventListener("load", () => {
 	let audio = document.querySelector("#sound");
 
 	let items = document.querySelectorAll(".item");
-	let api_key = document.querySelector("#api_key").value;
+	let api_key = document.querySelector("#api-key").value;
 
 	for (let item of items)
 	{
@@ -104,19 +106,64 @@ window.addEventListener("load", () => {
 
 {% block main %}
 
-<section class="item-panel">
+<section class="account">
 <div class="head">
-	<h2>Items to monitor</h2>
+	<h2 class="heading">User</h2>
 </div>
 <div class="body">
-<ul class="items">
-	{% for item in items %}
+{% if logged_in %}
+	<form class="logout" action="/logout" method="post">
+		<fieldset>
+			<label for="api-key">
+				{% if user.profile_image %}
+				<img class="profile-image" src="{{ user.profile_image }}" width="23" height="32">
+				{% endif %}
+				<span class="username">{{ user.name }}</span>
+			</label>
+			<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
+			<button type="submit"><span class="label">Logout</span></button>
+		</fieldset>
+	</form>
+{% else %}
+	<form class="login" action="/login" method="post">
+	<fieldset>
+		<fieldset>
+			<label for="api-key">API Key</label>
+			<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
+			<button type="submit"><span class="label">Login</span></button>
+		</fieldset>
+	</fieldset>
+	</form>
+{% endif %}
+</div>
+</section>
+
+{% if logged_in %}
+
+<section class="items">
+<div class="head">
+	<h2 class="heading">Item Monitor</h2>
+	<button id="items-edit-toggle" data-inputs="items-edit-toggle" data-inputs-event="click">
+		<span class="icon">⚙</span>
+	</button>
+</div>
+<div class="body">
+{% if user.items|length == 0 %}
+	<p>Currently no items on your watchlist.</p>
+{% endif %}
+<ul class="item-list">
+	{% if user.items|length %}
+		{% set rate_per_item = torn.api_limit / user.items|length %}
+		{% set interval = (1.0 / rate_per_item)|round(2, "ceil") %}
+	{% endif %}
+	{% for item_id, item in user.items %}
 	<li class="item stopped" 
-		data-itemalarm-id="{{ item.id }}"
+		data-itemalarm-id="{{ item_id }}"
 		data-itemalarm-bargains="" 
 		data-itemalarm-alarm-price="{{ item.alarm_price }}"
 		data-itemalarm-trade-price="{{ item.trade_price }}"
-		data-itemalarm-interval="{{ item.interval }}">
+		data-itemalarm-market-value="{{ items[item_id].market_value }}" 
+		data-itemalarm-interval="{{ interval }}">
 		<div class="controls">
 			<button class="start">
 				<span class="icon">▶</span>
@@ -128,12 +175,14 @@ window.addEventListener("load", () => {
 			</button>
 		</div>
 		<div class="image">
-			<img src="https://www.torn.com/images/items/{{ item.id }}/large.png">
+			<img src="{{ items[item_id].image }}">
 		</div>
 		<div class="info">
-			<span class="name">{{ item.name }}</span>
-			<span class="alarm_price">🔔 ${{ item.alarm_price }}</span>
-			<span class="trade_price">💰 ${{ item.trade_price }}</span>
+			{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
+			{% set alarm_value = item.alarm_price ? item.alarm_price : (trade_value * 0.85)|round %}
+			<span class="name">{{ items[item_id].name }}</span>
+			<span class="alarm_price">🔔 ${{ alarm_value }}</span>
+			<span class="trade_price">💰 ${{ trade_value }}</span>
 		</div>
 		<div class="alarm">
 			<div class="bargain">
@@ -142,7 +191,7 @@ window.addEventListener("load", () => {
 			</div>
 		</div>
 		<div class="actions">
-			<a class="button" href="{{ torn.market_link}}{{ item.id }}" target="_blank">
+			<a class="button" href="{{ torn.market_link }}{{ item_id }}" target="_blank">
 				<span class="icon">🛒</span>
 				<span class="label">To Market</span>
 			</a>
@@ -151,11 +200,52 @@ window.addEventListener("load", () => {
 	{% endfor %}
 </ul>
 </div>
+<script>
+	function on_items_edit_toggle(details)
+	{
+		let items_panel = document.querySelector(".items-panel");
+		if (!items_panel) return;
+
+		items_panel.classList.toggle("edit");
+	}
+
+	window.addEventListener("load", (event) => {
+		let inputs = new Inputs({ "name": "items-edit-toggle", "callback": on_items_edit_toggle });
+		inputs.init();
+	});
+</script>
 </section>
+
+{% endif %}
+{% if logged_in %}
+
+<section class="add-item">
+<div class="head">
+	<h2 class="heading">Add Items</h2>
+</div>
+<div class="body">
+<form action="/add-item" method="post">
+<fieldset>
+	<select name="add-item-id" id="add-item-id">
+		{% for key, item in items %}
+		<option value="{{ key }}">{{ item.name }}</option>
+		{% endfor %}
+	</select>
+	<button type="submit">
+		<span class="icon">+</span>
+		<span class="label">Add</span>
+	</button>
+</fieldset>
+</form>
+</div>
+</section>
+
+{% endif %}
+{% if logged_in %}
 
 <section class="settings-panel">
 <div class="head">
-	<h2>Settings</h2>
+	<h2 class="heading">Settings</h2>
 </div>
 <div class="body">
 	<audio id="sound" preload="auto" src="/audio/545365__stwime__idk2.mp3"></audio>
@@ -163,20 +253,21 @@ window.addEventListener("load", () => {
 		<label for="sound_volume">Volume</label>
 		<input type="range" id="sound_volume">
 	</fieldset>
-	<fieldset>
-		<label for="api_key">API Key</label>
-		<input type="password" id="api_key" {% if torn.api_key %}value="{{ torn.api_key }}"{% endif %}>
-	</fieldset>
+{#
 	<fieldset>
 		<label for="dynamic_prices">Use market values</label>
 		<input type="checkbox" id="dynamic_prices">
 	</fieldset>
+#}
 </div>
 </section>
 
+{% endif %}
+
+{#
 <section class="info">
 <div class="head">
-	<h2>Info</h2>
+	<h2 class="heading">Info</h2>
 </div>
 <div class="body">
 	<ul>
@@ -198,6 +289,6 @@ window.addEventListener("load", () => {
 	</ul>
 </div>
 </section>
-
+#}
 
 {% endblock %}
