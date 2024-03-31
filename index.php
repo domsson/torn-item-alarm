@@ -20,6 +20,7 @@ $encoding = yon_setup_utf8();
 $sid      = yon_setup_session();
 $uri      = yon_parse_url();
 $twig     = yon_setup_twig(TEMPLATE_DIR);
+$time     = time();
 
 $page      = yon_json_file_load(CONFIG_DIR . "/page.json");
 $torn      = yon_json_file_load(CONFIG_DIR . "/torn.json");
@@ -37,7 +38,7 @@ $base_url = "http://itemalarm-dev.halfpast.one";
 //
 
 $user_filepath = null;
-$user = yon_json_find_file_by_prop(USER_DIR, "sid", $sid, $user_filepath);
+$user = yon_json_find_newest_file_by_prop(USER_DIR, "sid", $sid, $user_filepath);
 
 if (!$user)
 {
@@ -72,40 +73,21 @@ function save_user_data_to_file($user, $filename_prop="player_id")
 
 function torn_fetch_user_info($api_url, $api_key)
 {
-	return yon_http_get("{$api_url}/user/?selections=basic&key={$api_key}", null);
+	return yon_http_get("{$api_url}/user/?selections=basic&key={$api_key}&comment=itemalarm", null);
 }
 
 function torn_fetch_user_profile($api_url, $api_key)
 {
-	return yon_http_get("{$api_url}/user/?selections=profile&key={$api_key}", null);
+	return yon_http_get("{$api_url}/user/?selections=profile&key={$api_key}&comment=itemalarm", null);
 }
 
 function torn_fetch_item_info($api_url, $api_key)
 {
-	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}", null);
+	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}&comment=itemalarm", null);
 }
 
-//
-// DUDE! WE CAN FETCH USER ID EVEN WITH PUBLIC KEY!
-// https://api.torn.com/user/?selections=basic&key=
-// $result["name"] = domsson
-// $result["player_id"] = 3206827
-//
-// Can also get profile image:
-// https://api.torn.com/user/?selections=profile&key=
-// $result["profile_image"] = "https://profileimages.torn.com/3c701333-7063-4911-b5d2-438fc767ec24-3206827.png"
-
-//
-// TODO let's put in a check to see whether the user is in a white-listed
-// 	faction or not so we can restrict access based on that for now!
-// 	API "profile" request gives the faction information as follows:"
-// 	"faction": {
-//		"position": "Officer - Mentor",
-//		"faction_id": 8103,
+// TODO also check if they are member of recruit of faction
 //		"days_in_faction": 56,
-//		"faction_name": "Horizon",
-//		"faction_tag": "HZN"
-//	},
 
 //
 // fetch item names and add them to the item JSON (TODO cache this!)
@@ -113,6 +95,10 @@ function torn_fetch_item_info($api_url, $api_key)
 
 $torn_items_filepath = TORN_DIR . "/items.json";
 $items = yon_json_file_load($torn_items_filepath);
+
+// Invalidate items if the file is older than an hour
+$items_age = $time - filemtime($torn_items_filepath);
+if ($items_age > 3600) $items = false;
 
 // TODO we also need to do this is the file on hand is too old (an hour or so?)
 if ($items === false && $api_key)
@@ -122,7 +108,6 @@ if ($items === false && $api_key)
 	if ($item_info && isset($item_info["items"]))
 	{
 		$items = $item_info["items"];
-		//echo "saving item info to " . $torn_items_filepath;
 		yon_json_file_save($torn_items_filepath, $items); 
 	}
 }
@@ -136,16 +121,23 @@ if ($uri["slug"] == "login")
 		yon_redirect("{$base_url}?login=failed&error=no_api_key");
 	}
 
-	// try to find file by API key
-	$user_filepath = null;
-	$user = yon_json_find_file_by_prop(USER_DIR, "api_key", $api_key, $user_filepath);
 
 	$user_info = torn_fetch_user_info($api_url, $api_key);
 	if (!$user_info or !isset($user_info["player_id"]))
 	{
 		yon_redirect("{$base_url}?login=failed&error=cant_fetch_user_info");
 	}
-	
+
+	// try to find existing file by player_id, if they've logged in with same API key before
+	$user_filepath = null;
+	$user = yon_json_find_file_by_prop(USER_DIR, "player_id", $user_info["player_id"], $user_filepath);
+	if (!$user) $user = [];
+
+	$user["sid"]       = $sid;
+	$user["api_key"]   = $api_key;
+	$user["player_id"] = $user_info["player_id"];
+	$user["name"]      = $user_info["name"];
+
 	$user_profile = torn_fetch_user_profile($api_url, $api_key);
 	if ($user_profile)
 	{
@@ -159,12 +151,7 @@ if ($uri["slug"] == "login")
 		}
 	}
 
-	$user["sid"]       = $sid;
-	$user["api_key"]   = $api_key;
-	$user["player_id"] = $user_info["player_id"];
-	$user["name"]      = $user_info["name"];
 	$saves = save_user_data_to_file($user);
-
 	yon_redirect($base_url);
 }
 
@@ -173,7 +160,7 @@ if ($uri["slug"] == "logout")
 	unset($user["api_key"]);
 	unset($user["name"]);
 	unset($user["faction"]);
-	save_user_data_to_file($user);
+	$save = save_user_data_to_file($user);
 	yon_redirect($base_url);
 }
 
@@ -222,6 +209,11 @@ if ($uri["slug"] == "edit-item")
 		save_user_data_to_file($user);
 	}
 	yon_redirect($base_url);
+}
+
+if ($uri["slug"] == "settings")
+{
+	
 }
 
 //
