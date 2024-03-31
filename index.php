@@ -30,7 +30,7 @@ $info = [];
 
 // TODO figure out while yon sees the URL as https (when it should be http)
 // 	and once that's fixed, use $uri["base"] for the redirect!
-$base_url = "http://itemalarm-dev.halfpast.one";
+$base_url = "http://itemalarm.halfpast.one";
 //yon_dump_var($uri);
 
 //
