@@ -221,7 +221,7 @@ if ($uri["slug"] == "settings")
 //
 
 $user["access"] = false;
-if ($whitelist)
+if (isset($user["player_id"]) && $whitelist)
 {
 	if (isset($whitelist["players"]) && is_array($whitelist["players"]))
 	{

@@ -197,11 +197,13 @@ window.addEventListener("load", (event) => {
 		{% set interval = (1.0 / rate_per_item)|round(2, "ceil") %}
 	{% endif %}
 	{% for item_id, item in user.items %}
+		{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
+		{% set alarm_value = item.alarm_price ? item.alarm_price : (trade_value * 0.85)|round %}
 	<li class="item stopped" 
 		data-itemalarm-id="{{ item_id }}"
 		data-itemalarm-bargains="" 
-		data-itemalarm-alarm-price="{{ item.alarm_price }}"
-		data-itemalarm-trade-price="{{ item.trade_price }}"
+		data-itemalarm-alarm-price="{{ alarm_value }}"
+		data-itemalarm-trade-price="{{ trade_value }}"
 		data-itemalarm-market-value="{{ items[item_id].market_value }}" 
 		data-itemalarm-interval="{{ interval }}">
 		<div class="watch">
@@ -219,8 +221,6 @@ window.addEventListener("load", (event) => {
 			<img src="{{ items[item_id].image }}">
 		</div>
 		<div class="info">
-			{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
-			{% set alarm_value = item.alarm_price ? item.alarm_price : (trade_value * 0.85)|round %}
 			<span class="name">{{ items[item_id].name }}</span>
 			<span class="alarm_price">🔔 ${{ alarm_value }}</span>
 			<span class="trade_price">💰 ${{ trade_value }}</span>
