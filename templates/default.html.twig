@@ -169,7 +169,7 @@ window.addEventListener("load", (event) => {
 {% else %}
 	<form class="login" action="/login" method="post">
 	<fieldset>
-		<label for="api-key">API Key</label>
+		<label for="api-key">Public API Key</label>
 		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
 		<button type="submit"><span class="label">Login</span></button>
 	</fieldset>
