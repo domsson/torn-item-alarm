@@ -28,10 +28,7 @@ $whitelist = yon_json_file_load(CONFIG_DIR . "/whitelist.json");
 
 $info = [];
 
-// TODO figure out while yon sees the URL as https (when it should be http)
-// 	and once that's fixed, use $uri["base"] for the redirect!
-$base_url = "http://itemalarm.halfpast.one";
-//yon_dump_var($uri);
+$base_url = $uri["base"];
 
 //
 // check if we have a user record (based on session ID)
