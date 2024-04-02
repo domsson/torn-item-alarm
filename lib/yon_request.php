@@ -119,7 +119,8 @@ function yon_http_request($url, $method, $data=null, $auth=null, $ctype=null, $h
 
 	$options = [
 		"http" => [
-			"method"  => $method
+			"method"  => $method,
+			"ignore_errors" => true
 		]
 	];
 
@@ -139,9 +140,6 @@ function yon_http_request($url, $method, $data=null, $auth=null, $ctype=null, $h
 			$options["http"]["content"] = $content;
 		}
 	}
-
-	// Prevent non-200 status codes resulting in a PHP warning
-	$options["http"]["ignore_errors"] = true;
 
 	// Actually make the request
 	$context = stream_context_create($options);
@@ -164,24 +162,24 @@ function yon_http_request($url, $method, $data=null, $auth=null, $ctype=null, $h
 // Convenience methods - shortcuts with more defaults, less control
 //
 
-function yon_http_get($url, $data, $auth=null, $ctype=null, &$code=null)
+function yon_http_get($url, $data=null, $auth=null, $ctype=null, &$status=null)
 {
-	return yon_http_request($url, "GET", $data, $auth, $ctype, null, $code);
+	return yon_http_request($url, "GET", $data, $auth, $ctype, null, $status);
 }
 
-function yon_http_post($url, $data, $auth=null, $ctype=null, &$code=null)
+function yon_http_post($url, $data=null, $auth=null, $ctype=null, &$status=null)
 {
-	return yon_http_request($url, "POST", $data, $auth, $ctype, null, $code);
+	return yon_http_request($url, "POST", $data, $auth, $ctype, null, $status);
 }
 
-function yon_http_put($url, $data, $auth=null, $ctype=null, &$code=null)
+function yon_http_put($url, $data=null, $auth=null, $ctype=null, &$status=null)
 {
-	return yon_http_request($url, "PUT", $data, $auth, $ctype, null, $code);
+	return yon_http_request($url, "PUT", $data, $auth, $ctype, null, $status);
 }
 
-function yon_http_delete($url, $data, $auth=null, $ctype=null, &$code=null)
+function yon_http_delete($url, $data=null, $auth=null, $ctype=null, &$status=null)
 {
-	return yon_http_request($url, "DELETE", $data, $auth, $ctype, null, $code);
+	return yon_http_request($url, "DELETE", $data, $auth, $ctype, null, $status);
 }
 
 ?>

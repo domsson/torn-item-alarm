@@ -44,12 +44,16 @@ function yon_log($message, $file="./log.txt", $level="notice")
 	file_put_contents($file, $line, FILE_APPEND);
 }
 
-function yon_echo_and_exit($data, $encode_as_json=true)
+function yon_echo_and_exit($data, $encode_as_json=true, $send_json_header=true)
 {
 	if ($encode_as_json)
 	{
 		$flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 		$data = json_encode($data, $flags);
+	}
+	if ($send_json_header)
+	{
+		header('Content-Type: application/json; charset=utf-8');
 	}
 	echo $data;
 	exit();
@@ -61,9 +65,24 @@ function yon_redirect($url, $status=303)
 	exit();
 }
 
+function yon_is_https($https_port=443)
+{
+	$scheme = isset($_SERVER["REQUEST_SCHEME"]) ?
+	       	strtolower($_SERVER["REQUEST_SCHEME"]) : null;
+	$https  = isset($_SERVER["HTTPS"]) ? 
+		strtolower($_SERVER["HTTPS"]) : null;
+	$port   = isset($_SERVER["SERVER_PORT"]) ?
+	       	(int) $_SERVER["SERVER_PORT"] : null;
+
+	if ($scheme === "https") return true;
+	if ($https  === "on") return true;
+	if ($https_port && ($port === $https_port)) return true;
+	return false;
+}
+
 function yon_get_full_url()
 {
-	$scheme = isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https" : "https";
+	$scheme = yon_is_https() ? "https" : "http";
 	return $scheme . "://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
 }
 
