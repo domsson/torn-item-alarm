@@ -12,7 +12,8 @@ $api_key = yon_get_http_var("api_key");
 $api_url = "https://api.torn.com/market/${item_id}";
 $api_data = [
 	"selections" => "bazaar,itemmarket",
-	"key" => $api_key 
+	"key" => $api_key,
+	"comment" => "itemalarm"	
 ];
 
 $filepath = MARKET_DIR . "/${item_id}.json";

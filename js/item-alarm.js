@@ -1,12 +1,19 @@
 class ItemAlarm
 {
-	constructor(item_id, api_key, cb=null, attr="data-itemalarm")
+	constructor(item_id, api_key, api_url=null, cb=null, attr="data-itemalarm")
 	{
-		this.api_url  = "https://api.torn.com/market/";
-		this.api_url += "{item_id}?selections=bazaar,itemmarket";
-		this.api_url += "&key={api_key}";
-		this.api_url += "&comment=itemalarm";
-
+		if (api_url)
+		{
+			this.api_url = api_url;
+		}
+		else
+		{
+			this.api_url  = "https://api.torn.com/market/";
+			this.api_url += "{item_id}?selections=bazaar,itemmarket";
+			this.api_url += "&key={api_key}";
+			this.api_url += "&comment=itemalarm";
+		}
+	
 		this.item_id  = item_id;
 		this.api_key  = api_key;
 		this.callback = cb;

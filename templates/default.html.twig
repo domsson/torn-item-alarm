@@ -109,6 +109,7 @@ function calculate_profit(item, bargains)
 }
 
 window.addEventListener("load", (event) => {
+	let api_url = "{{ config.api_url|raw }}";
 
 	let audio = document.querySelector("#sound");
 
@@ -120,7 +121,7 @@ window.addEventListener("load", (event) => {
 		let item_id = item.getAttribute("data-itemalarm-id");
 		if (!item_id) continue;
 
-		let alarm = new ItemAlarm(item_id, api_key, itemalarm_cb);
+		let alarm = new ItemAlarm(item_id, api_key, api_url, itemalarm_cb);
 		alarm.init();
 
 		let start = item.querySelector(".start");

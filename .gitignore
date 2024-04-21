@@ -1,4 +1,5 @@
 *.swp
 .htpasswd
+cache/*
 data/users/*
 data/torn/*

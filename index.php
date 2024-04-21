@@ -30,6 +30,9 @@ $whitelist = yon_json_file_load(CONFIG_DIR . "/whitelist.json");
 $info = [];
 
 $base_url = $uri["base"];
+$config    = [
+	"api_url" => "{$base_url}/api/item.php?item_id={item_id}&api_key={api_key}"
+];
 
 //
 // check if we have a user record (based on session ID)
@@ -252,6 +255,7 @@ $options = [
 	"user"    => $user,
 	"info"    => $info,
 	"torn"    => $torn,
+	"config"  => $config,
 	"items"   => $items
 ];
 
