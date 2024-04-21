@@ -1,0 +1,29 @@
+<div class="head">
+	<h2 class="heading">Item Alarm v{{ version.major }}.{{ version.minor }}.{{version.patch }}</h2>
+</div>
+<div class="body">
+{% if logged_in %}
+	<form class="logout" action="/logout" method="post">
+		<fieldset>
+			<label for="api-key">
+				{% if user.profile_image %}
+				<img class="profile-image" src="{{ user.profile_image }}" width="23" height="32">
+				{% endif %}
+				<span class="username">{{ user.name }}</span>
+				<span class="faction">{{ user.faction.faction_name }}</span>
+			</label>
+			<input type="hidden" name="api-key" id="api-key" value="{{ user.api_key }}">
+			<button type="submit"><span class="label">Logout</span></button>
+		</fieldset>
+	</form>
+{% else %}
+	<form class="login" action="/login" method="post">
+	<fieldset>
+		<label for="api-key">Public API Key</label>
+		<input type="password" name="api-key" id="api-key" {% if user.api_key %}value="{{ user.api_key }}"{% endif %}>
+		<button type="submit"><span class="label">Login</span></button>
+	</fieldset>
+	</form>
+{% endif %}
+</div>
+

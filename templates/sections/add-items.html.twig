@@ -1,0 +1,38 @@
+<div class="head">
+	<h2 class="heading">Add Items</h2>
+</div>
+<div class="body">
+	<form action="/add-item" method="post">
+		<fieldset>
+			<input id="somethinglol" list="all-items" data-inputs="add-item" data-inputs-event="change">
+			<datalist id="all-items">
+				{% for key, item in items %}
+				<option value="{{ item.name }}">{{ item.name }}</option>
+				{% endfor %}
+			</datalist>
+			<select name="item-id" id="add-item-id">
+				<option value="">(please select)</option>
+				{% for key, item in items %}
+				<option value="{{ key }}">{{ item.name }}</option>
+				{% endfor %}
+			</select>
+			<button type="submit" data-inputs-event="click">
+				<span class="icon">+</span>
+				<span class="label">Add</span>
+			</button>
+		</fieldset>
+	</form>
+</div>
+<script>
+function on_add_item_input(details)
+{
+	details.event.preventDefault();
+	console.log(details.filtered);
+}
+
+window.addEventListener("load", (event) => {
+	let add_item_inputs = new Inputs({ name: "add-item", callback: on_add_item_input });
+	add_item_inputs.init();
+});
+</script>
+

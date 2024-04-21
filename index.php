@@ -23,6 +23,7 @@ $twig     = yon_setup_twig(TEMPLATE_DIR);
 $time     = time();
 
 $page      = yon_json_file_load(CONFIG_DIR . "/page.json");
+$version   = yon_json_file_load(CONFIG_DIR . "/version.json");
 $torn      = yon_json_file_load(CONFIG_DIR . "/torn.json");
 $whitelist = yon_json_file_load(CONFIG_DIR . "/whitelist.json");
 
@@ -244,13 +245,14 @@ if (isset($user["player_id"]) && $whitelist)
 //
 	
 $options = [
-	"get"   => $_GET,
-	"post"  => $_POST,
-	"page"  => $page,
-	"user"  => $user,
-	"info"  => $info,
-	"torn"  => $torn,
-	"items" => $items
+	"get"     => $_GET,
+	"post"    => $_POST,
+	"page"    => $page,
+	"version" => $version,
+	"user"    => $user,
+	"info"    => $info,
+	"torn"    => $torn,
+	"items"   => $items
 ];
 
 echo $twig->render("default.html.twig", $options);
