@@ -148,6 +148,14 @@ function yon_parse_url($url="")
 	];
 }
 
+function yon_get_http_var($name, $filter=FILTER_SANITIZE_FULL_SPECIAL_CHARS)
+{
+	// GET takes priority over POST for easier testing
+	$var = $_GET[$name] ?? ($_POST[$name] ?? null);
+	if ($var === null) return null;
+	return filter_var(trim($var), $filter);
+}
+
 function yon_parse_accept_language($accept_language)
 {
 	$langs = [];
