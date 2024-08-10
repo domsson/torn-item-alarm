@@ -1,6 +1,6 @@
 {% extends "partials/base.html.twig" %}
 
-{% set logged_in = user and user.player_id and user.api_key %}
+{% set logged_in = user and user.player_id and user.api_key and user.access %}
 
 {% block head %}
 <script src="js/inputs.js"></script>
