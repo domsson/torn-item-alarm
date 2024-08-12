@@ -306,12 +306,20 @@ window.addEventListener("load", (event) => {
 <div class="body">
 <form action="/add-item" method="post">
 <fieldset>
+	<input list="item-list" name="item-name" id="add-item-name">
+	<datalist id="item-list">
+		{% for key, item in items %}
+		<option value="{{ item.name|escape('html') }}"></option>
+		{% endfor %}
+	</datalist>
+	{#
 	<select name="item-id" id="add-item-id">
 		<option value="">(please select)</option>
 		{% for key, item in items %}
 		<option value="{{ key }}">{{ item.name }}</option>
 		{% endfor %}
 	</select>
+	#}
 	<button type="submit">
 		<span class="icon">+</span>
 		<span class="label">Add</span>

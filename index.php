@@ -87,6 +87,16 @@ function torn_fetch_item_info($api_url, $api_key)
 	return yon_http_get("{$api_url}/torn/?selections=items&key={$api_key}&comment=itemalarm", null);
 }
 
+function find_item_id_by_name($items, $name)
+{
+	foreach ($items as $item_id => $item)
+	{
+		if (!isset($item["name"])) continue;
+		if ($item["name"] == $name) return $item_id;
+	}
+	return null;
+}
+
 // TODO also check if they are member of recruit of faction
 //		"days_in_faction": 56,
 
@@ -167,8 +177,19 @@ if ($uri["slug"] == "logout")
 
 if ($uri["slug"] == "add-item")
 {
-	$item_id = (int) filter_var($_POST["item-id"], FILTER_SANITIZE_NUMBER_INT);
-	if ($user)
+	$item_id   = (int) yon_get_http_var("item-id",   FILTER_SANITIZE_NUMBER_INT);
+	$item_name =       yon_get_http_var("item-name", FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+	if ($item_id == null && $item_name)
+	{
+		//$item_id = find_item_id_by_name($items, html_entity_decode($item_name));
+		$item_id = find_item_id_by_name($items, htmlspecialchars_decode($item_name));
+	}	
+
+	yon_dump_var($item_name);
+	yon_dump_var($item_id);
+
+	if ($item_id && $user)
 	{
 		if (!isset($user["items"])) $user["items"] = [];
 		$user["items"][$item_id] = [
@@ -177,7 +198,7 @@ if ($uri["slug"] == "add-item")
 		];
 		save_user_data_to_file($user);
 	}
-	yon_redirect($base_url);
+	//yon_redirect($base_url);
 }
 
 if ($uri["slug"] == "remove-item")
