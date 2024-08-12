@@ -186,9 +186,6 @@ if ($uri["slug"] == "add-item")
 		$item_id = find_item_id_by_name($items, htmlspecialchars_decode($item_name));
 	}	
 
-	yon_dump_var($item_name);
-	yon_dump_var($item_id);
-
 	if ($item_id && $user)
 	{
 		if (!isset($user["items"])) $user["items"] = [];
@@ -198,7 +195,7 @@ if ($uri["slug"] == "add-item")
 		];
 		save_user_data_to_file($user);
 	}
-	//yon_redirect($base_url);
+	yon_redirect($base_url);
 }
 
 if ($uri["slug"] == "remove-item")
