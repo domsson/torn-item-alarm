@@ -116,12 +116,12 @@ if ($items_age > 3600) $items = false;
 // TODO we also need to do this is the file on hand is too old (an hour or so?)
 if ($items === false && $api_key)
 {
-	yon_log("Attempting to fetch items from Torn API", LOG_FILE);
+	//yon_log("Attempting to fetch items from Torn API", LOG_FILE);
 	$item_info = torn_fetch_item_info($api_url, $api_key);
 
 	if ($item_info && isset($item_info["items"]))
 	{
-		yon_log("Succesfully fetched items; saving to file", LOG_FILE);
+		//yon_log("Succesfully fetched items; saving to file", LOG_FILE);
 		$items = $item_info["items"];
 		yon_json_file_save($torn_items_filepath, $items); 
 	}
@@ -133,7 +133,7 @@ if ($uri["slug"] == "login")
 	$api_key = filter_var($_POST["api-key"], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 	if (empty($api_key))
 	{
-		yon_log("User attempted to login, but no API key was provided", LOG_FILE);
+		//yon_log("User attempted to login, but no API key was provided", LOG_FILE);
 		yon_redirect("{$base_url}?login=failed&error=no_api_key");
 	}
 
@@ -141,7 +141,7 @@ if ($uri["slug"] == "login")
 	$user_info = torn_fetch_user_info($api_url, $api_key);
 	if (!$user_info or !isset($user_info["player_id"]))
 	{
-		yon_log("User attempted to login, but couldn't fetch user info", LOG_FILE);
+		//yon_log("User attempted to login, but couldn't fetch user info", LOG_FILE);
 		yon_redirect("{$base_url}?login=failed&error=cant_fetch_user_info");
 	}
 
@@ -258,7 +258,7 @@ if (isset($user["player_id"]) && $whitelist)
 		{
 			$username = $user["name"];
 			$user_id  = $user["player_id"];
-			yon_log("User {$username} [{$user_id}] is not whitelisted", LOG_FILE);
+			//yon_log("User {$username} [{$user_id}] is not whitelisted", LOG_FILE);
 		}
 	}
 	if (isset($whitelist["factions"]) && is_array($whitelist["factions"]))
@@ -273,7 +273,7 @@ if (isset($user["player_id"]) && $whitelist)
 			{
 				$username = $user["name"];
 				$user_id  = $user["player_id"];
-				yon_log("User {$username} [{$user_id}] is not in a whitelisted faction", LOG_FILE);
+				//yon_log("User {$username} [{$user_id}] is not in a whitelisted faction", LOG_FILE);
 			}
 		}
 	}
