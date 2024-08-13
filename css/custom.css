@@ -167,7 +167,7 @@ p {
 }
 
 .item .watch,
-.item .edit {
+.item .edit-panel {
 	display: flex;
 	overflow: auto;
 	padding: var(--gap-m);
@@ -182,15 +182,15 @@ p {
 	margin: var(--gap-m);
 }
 
-.items .edit {
+.items .edit-panel {
 	display: none;
 }
 
-.items.edit .watch {
+.item.editing .watch {
 	border-bottom: 1px solid #222;
 }
 
-.items.edit .edit {
+.item.editing .edit-panel {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
@@ -199,7 +199,7 @@ p {
 	font-size: 11px;
 }
 
-.items .edit form {
+.items .edit-panel form {
 	display: grid;
 	grid-template-rows: 2fr;
 	grid-template-columns: 2fr;
@@ -221,14 +221,14 @@ p {
 	grid-column: 2;
 }
 
-.items .edit button {
+.items .edit-panel button {
 	min-width: 2.5rem;
 	height: 100%;
 	padding: var(--gap-m);
 	font-size: inherit;
 }
 
-.items .edit button .label {
+.items .edit-panel button .label {
 	display: none;
 }
 
@@ -239,29 +239,29 @@ p {
 	gap: var(--gap-m);
 }
 
-.items .edit label {
+.items .edit-panel label {
 	flex-grow: 1;
 }
 
-.items .edit input::-webkit-outer-spin-button,
-.items .edit input::-webkit-inner-spin-button {
+.items .edit-panel input::-webkit-outer-spin-button,
+.items .edit-panel input::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
 }
 
-.items .edit input {
+.items .edit-panel input {
 	text-align: right;
 	-moz-appearance: textfield;
 }
 
-.items .edit input,
-.items .edit select, 
-.items .edit option {
+.items .edit-panel input,
+.items .edit-panel select, 
+.items .edit-panel option {
 	flex: 1 1 0px;
 	padding: 6px;
 }
 
-.items .edit input {
+.items .edit-panel input {
 	flex-shrink: 1;
 }
 
@@ -287,6 +287,26 @@ p {
 	border: 1px solid #444;
 	border-radius: var(--border-radius);
 	background: linear-gradient(0, #222, #000);
+}
+
+.item .image {
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-template-rows: 1fr;
+}
+
+.item .image img,
+.item .image button {
+	grid-row: 1/1;
+	grid-column: 1/1;
+}
+
+.item .image button {
+	visibility: hidden;
+}
+
+.item .image:hover button {
+	visibility: visible;
 }
 
 .item img {
