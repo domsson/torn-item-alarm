@@ -184,9 +184,6 @@ window.addEventListener("load", (event) => {
 <section class="items">
 <div class="head">
 	<h2 class="heading">Item Monitor</h2>
-	<button id="items-edit-toggle" data-inputs="items-edit-toggle" data-inputs-event="click">
-		<span class="icon">⚙</span>
-	</button>
 </div>
 <div class="body">
 {% if user.items|length == 0 %}
@@ -200,7 +197,7 @@ window.addEventListener("load", (event) => {
 	{% for item_id, item in user.items %}
 		{% set trade_value = item.trade_price ? item.trade_price : items[item_id].market_value %}
 		{% set alarm_value = item.alarm_price ? item.alarm_price : (trade_value * 0.85)|round %}
-	<li class="item stopped" 
+	<li id="item-{{ item_id }}" class="item stopped" 
 		data-itemalarm-id="{{ item_id }}"
 		data-itemalarm-bargains="" 
 		data-itemalarm-alarm-price="{{ alarm_value }}"
@@ -220,6 +217,10 @@ window.addEventListener("load", (event) => {
 		</div>
 		<div class="image">
 			<img src="{{ items[item_id].image }}">
+			<button class="customize" id="item-edit-toggle-{{ item_id }}" data-inputs="item-edit-toggle" data-inputs-event="click">
+				<span class="icon">⚙</span>
+				<span class="label">Edit</span>
+			</button>
 		</div>
 		<div class="info">
 			<span class="name">{{ items[item_id].name }}</span>
@@ -239,7 +240,7 @@ window.addEventListener("load", (event) => {
 			</a>
 		</div>
 		</div>
-		<div class="edit">
+		<div class="edit-panel">
 			<form class="edit-item" action="/edit-item" method="post">
 				<formgroup class="edit-alarm-price">
 					<label>Alarm price</label>
@@ -281,17 +282,17 @@ window.addEventListener("load", (event) => {
 </ul>
 </div>
 <script>
-	function on_items_edit_toggle(details)
+	function on_item_edit_toggle(details)
 	{
-		let items_panel = document.querySelector(".items");
-		if (!items_panel) return;
-
-		items_panel.classList.toggle("edit");
+		let item_id = details.id.substring(details.id.lastIndexOf("-") + 1);
+		console.log(item_id);
+		let item_element = document.querySelector(`#item-${item_id}`);
+		item_element.classList.toggle("editing");
 	}
 
 	window.addEventListener("load", (event) => {
-		let inputs = new Inputs({ "name": "items-edit-toggle", "callback": on_items_edit_toggle });
-		inputs.init();
+		let edit_inputs = new Inputs({ "name": "item-edit-toggle", "callback": on_item_edit_toggle });
+		edit_inputs.init();
 	});
 </script>
 </section>
