@@ -3,3 +3,4 @@
 cache/*
 data/users/*
 data/torn/*
+log/*
