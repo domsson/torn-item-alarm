@@ -313,14 +313,6 @@ window.addEventListener("load", (event) => {
 		<option value="{{ item.name|escape('html') }}"></option>
 		{% endfor %}
 	</datalist>
-	{#
-	<select name="item-id" id="add-item-id">
-		<option value="">(please select)</option>
-		{% for key, item in items %}
-		<option value="{{ key }}">{{ item.name }}</option>
-		{% endfor %}
-	</select>
-	#}
 	<button type="submit">
 		<span class="icon">+</span>
 		<span class="label">Add</span>
@@ -358,12 +350,6 @@ window.addEventListener("load", (event) => {
 			<span class="unit">%</span>
 		</output>
 	</fieldset>
-{#
-	<fieldset>
-		<label for="dynamic_prices">Use market values</label>
-		<input type="checkbox" id="dynamic_prices">
-	</fieldset>
-#}
 </div>
 <script>
 window.addEventListener("load", (event) => {
@@ -393,32 +379,5 @@ window.addEventListener("load", (event) => {
 </section>
 
 {% endif %}
-
-{#
-<section class="info">
-<div class="head">
-	<h2 class="heading">Info</h2>
-</div>
-<div class="body">
-	<ul>
-		<li class="api_limit">
-			<span class="label">Limit: </span>
-			<span class="value">{{ torn.api_limit|round(2) }}</span>
-			<span class="unit">/s</span>
-		</li>
-		<li class="req_max">
-			<span class="label">Maximum: </span>
-			<span class="value">{{ info.req_per_sec|round(2) }}</span>
-			<span class="unit">/s</span>
-		</li>
-		<li class="req_cur">
-			<span class="label">Current: </span>
-			<span class="value">0.00</span>
-			<span class="unit">/s</span>
-		</li>
-	</ul>
-</div>
-</section>
-#}
 
 {% endblock %}
