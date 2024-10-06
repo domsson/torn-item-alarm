@@ -19,3 +19,11 @@ A web-based tool that watches the in-game marketplace of torn.com for bargains a
  - ???
  - Profit
 
+# Usage
+
+ - Add items of interest
+ - Configure the items by clicking the item image (reveals a 'cog' icon)
+ - Set 'alarm' price to the price you want to buy for
+ - Set 'reference' price to the price you sell for (optional, but used to calculate profits)
+ - Click the floppy icon to save (note: can only edit one at a time, saving reloads page)
+ - Start monitoring items by clicking the play button in front of them
