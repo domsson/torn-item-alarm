@@ -16,8 +16,24 @@ A web-based tool that watches the in-game marketplace of torn.com for bargains a
  - Plop the contents of the repo into `/var/www/itemalarm` or wherever you want it
  - Set up an Apache config in `/etc/apache2/sites-available` and enable it
  - Possibly deal with any errors stemming from non-existing directories or missing permissions
+ - Create a whitelist file (see next section)
  - ???
  - Profit
+
+# whitelist
+
+You need to have a `config/whitelist.json` and add at least yourself or your faction in order to be able to log in:
+
+```
+{
+	"factions": [
+		8103
+	],
+	"players": [
+		3206827
+	]
+}
+```
 
 # Usage
 
