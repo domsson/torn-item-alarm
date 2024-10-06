@@ -2,6 +2,8 @@
 
 A web-based tool that watches the in-game marketplace of torn.com for bargains and notifies the user if any were found.
 
+![item-alarm preview](https://github.com/domsson/torn-item-alarm/blob/main/itemalarm.png?raw=true)
+
 # Dependencies
 
  - Apache (due to reliance on some rewrite magic for the URLs)
