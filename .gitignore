@@ -1,6 +1,7 @@
 *.swp
 .htpasswd
 cache/*
+config/whitelist.json
 data/users/*
 data/torn/*
 log/*
