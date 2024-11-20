@@ -9,7 +9,7 @@ define("MARKET_DIR", "../cache/market");
 $item_id = yon_get_http_var("item_id", FILTER_VALIDATE_INT);
 $api_key = yon_get_http_var("api_key");
 
-$api_url = "https://api.torn.com/market/${item_id}";
+$api_url = "https://api.torn.com/v2/market/${item_id}";
 $api_data = [
 	"selections" => "bazaar,itemmarket",
 	"key" => $api_key,
