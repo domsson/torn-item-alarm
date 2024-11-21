@@ -329,7 +329,7 @@ p {
 	color: inherit;
 }
 
-.item .bargain .quantity::before {
+.item .bargain .amount::before {
 	content: "×";
 }
 

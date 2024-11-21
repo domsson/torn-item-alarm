@@ -11,7 +11,8 @@ $api_key = yon_get_http_var("api_key");
 
 $api_url = "https://api.torn.com/v2/market/${item_id}";
 $api_data = [
-	"selections" => "bazaar,itemmarket",
+	"selections" => "itemmarket",
+//	"selections" => "bazaar,itemmarket",
 	"key" => $api_key,
 	"comment" => "itemalarm"	
 ];

@@ -8,8 +8,8 @@ class ItemAlarm
 		}
 		else
 		{
-			this.api_url  = "https://api.torn.com/market/";
-			this.api_url += "{item_id}?selections=bazaar,itemmarket";
+			this.api_url  = "https://api.torn.com/v2/market/";
+			this.api_url += "{item_id}?selections=itemmarket";
 			this.api_url += "&key={api_key}";
 			this.api_url += "&comment=itemalarm";
 		}
@@ -77,12 +77,6 @@ class ItemAlarm
 		let item_element = this.find_element();
 		if (!item_element) return false;
 
-		/*
-		let alarm_price = this.get_attr(item_element, "alarm-price");
-		let trade_price = this.get_attr(item_element, "trade-price");
-		let interval    = this.get_attr(item_element, "interval");
-		*/
-
 		this.item = {
 			"id": this.item_id,
 			"element": item_element
@@ -142,51 +136,44 @@ class ItemAlarm
 		if (!response) return;
 		response = JSON.parse(response);
 
-		let bazaar = this.process_listings(response.bazaar);
-		let market = this.process_listings(response.itemmarket);
+		if (!Object.hasOwn(response, "itemmarket")) return;
+		if (!Object.hasOwn(response.itemmarket, "listings")) return;
 
-		let listings = { "bazaar": bazaar.listings, "market": market.listings };
-		let quantity = bazaar.quantity + market.quantity;
+		let market = this.process_listings(response.itemmarket.listings);
+
+		let listings = market.listings;
+		let amount = market.amount;
 
 		let bargains = []; 
 		let dirty = false;
-		for (let listing of listings.bazaar)
+		for (let listing of listings)
 		{
-			if (!this.bargains.includes(listing.ID))
+			if (!this.bargains.includes(listing.id))
 			{
 				dirty = true;
 			}
 
-			bargains.push(listing.ID);
-		}
-		for (let listing of listings.market)
-		{
-			if (!this.bargains.includes(listing.ID))
-			{
-				dirty = true;
-			}
-
-			bargains.push(listing.ID);
+			bargains.push(listing.id);
 		}
 		this.bargains = [...bargains];
 		this.dirty = dirty;
 
-		this.callback(this.item, listings, quantity, dirty);
+		this.callback(this.item, listings, amount, dirty);
 	}
 
 	process_listings(listings)
 	{
-		let result = { "listings": [], "quantity": 0 };
+		let result = { "listings": [], "amount": 0 };
 
-		if (!listings)                return result;
-		if (!Array.isArray(listings)) return result;
-		if (!this.item.alarm_price)   return result;
+		if (!listings)                { console.log("e1"); return result; }
+		if (!Array.isArray(listings)) { console.log("e2"); return result; }
+		if (!this.item.alarm_price)   { console.log("e3"); return result; }
 
 		for (let listing of listings)
 		{
-			if (listing.cost > this.item.alarm_price) break;
+			if (listing.price > this.item.alarm_price) break;
 			result.listings.push(listing);
-			result.quantity += listing.quantity;
+			result.amount += listing.amount;
 		}
 
 		return result;

@@ -68,16 +68,16 @@ function adjust_item_intervals(items, req_per_min)
 	}
 }
 
-function itemalarm_cb(item, bargains, quantity, dirty)
+function itemalarm_cb(item, bargains, amount, dirty)
 {
-	console.log("Bargains for " + item.id + ": " + quantity);
+	console.log("Bargains for " + item.id + ": " + amount);
 
 	let was_hot = item.element.classList.contains("hot");
-	let item_hot = quantity > 0;
+	let item_hot = amount > 0;
 	item.element.classList.toggle("hot", item_hot);
 	
-	let quantity_info = item.element.querySelector(".quantity");
-	quantity_info.textContent = quantity;
+	let amount_info = item.element.querySelector(".amount");
+	amount_info.textContent = amount;
 
 	let profit = calculate_profit(item, bargains);
 	let profit_info = item.element.querySelector(".profit");
@@ -88,7 +88,6 @@ function itemalarm_cb(item, bargains, quantity, dirty)
 		let audio = document.querySelector("#sound");
 		let volume = document.querySelector("#sound_volume");
 		let vol_value = parseInt(volume.value) / 100.0;
-		console.log("Playing notification sound at " + vol_value + "% volume");
 		audio.volume = vol_value;
 		audio.play();
 	}
@@ -97,13 +96,9 @@ function itemalarm_cb(item, bargains, quantity, dirty)
 function calculate_profit(item, bargains)
 {
 	let profit = 0;
-	for (let bargain of bargains.bazaar)
+	for (let bargain of bargains)
 	{
-		profit += (item.trade_price - bargain.cost) * bargain.quantity;
-	}
-	for (let bargain of bargains.market)
-	{
-		profit += (item.trade_price - bargain.cost) * bargain.quantity;
+		profit += (item.trade_price - bargain.price) * bargain.amount;
 	}
 	return profit;
 }
@@ -229,7 +224,7 @@ window.addEventListener("load", (event) => {
 		</div>
 		<div class="alarm">
 			<div class="bargain">
-				<span class="quantity">0</span>
+				<span class="amount">0</span>
 				<span class="profit">0</span>
 			</div>
 		</div>
