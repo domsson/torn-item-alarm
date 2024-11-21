@@ -234,7 +234,7 @@ window.addEventListener("load", (event) => {
 			</div>
 		</div>
 		<div class="actions">
-			<a class="button" href="{{ torn.market_link }}{{ item_id }}" target="_blank">
+			<a class="button" href="{{ torn.market_link }}{{ item_id }}&itemType={{ items[item_id].type }}" target="_blank">
 				<span class="icon">🛒</span>
 				<span class="label">To Market</span>
 			</a>
